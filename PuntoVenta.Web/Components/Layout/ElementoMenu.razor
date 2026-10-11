@@ -1,0 +1,48 @@
+<div class="nav-item px-3">
+    @if (Item.Hijos.Any())
+    {
+        <div class="d-flex align-items-center">
+            <NavLink class="nav-link flex-grow-1" href="@Item.Ruta">
+                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> @Item.Nombre
+            </NavLink>
+            <button class="btn btn-sm text-white" @onclick="Alternar">@(abierto ? "▾" : "▸")</button>
+        </div>
+
+        @if (abierto)
+        {
+            <div style="margin-left: 12px;">
+                @foreach (var hijo in Item.Hijos.OrderBy(h => h.Orden))
+                {
+                    <ElementoMenu Item="hijo" />
+                }
+            </div>
+        }
+    }
+    else
+    {
+        <NavLink class="nav-link" href="@Item.Ruta">
+            <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> @Item.Nombre
+        </NavLink>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public MenuModel Item { get; set; } = default!;
+
+    private bool abierto = true;
+
+    private void Alternar()
+    {
+        abierto = !abierto;
+    }
+
+    public class MenuModel
+    {
+        public int IdMenu { get; set; }
+        public string Nombre { get; set; } = "";
+        public string? Ruta { get; set; }
+        public int Orden { get; set; }
+        public List<MenuModel> Hijos { get; set; } = new();
+    }
+}

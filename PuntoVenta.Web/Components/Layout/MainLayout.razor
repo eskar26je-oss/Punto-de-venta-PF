@@ -1,0 +1,40 @@
+﻿@inherits LayoutComponentBase
+@inject SesionUsuario Sesion
+@inject NavigationManager Nav
+
+@if (Sesion.EstaAutenticado)
+{
+    <div class="page">
+        <div class="sidebar">
+            <NavMenu />
+        </div>
+
+        <main>
+            <div class="top-row px-4">
+                <span>Usuario: <strong>@Sesion.Usuario</strong></span>
+            </div>
+
+            <article class="content px-4">
+                @Body
+            </article>
+        </main>
+    </div>
+}
+
+<div id="blazor-error-ui" data-nosnippet>
+    Ocurrió un error inesperado.
+    <a href="." class="reload">Recargar</a>
+    <span class="dismiss">🗙</span>
+</div>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await Sesion.RestaurarAsync();
+
+        if (!Sesion.EstaAutenticado)
+        {
+            Nav.NavigateTo("/login");
+        }
+    }
+}

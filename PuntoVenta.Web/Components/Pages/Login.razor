@@ -1,0 +1,105 @@
+@page "/login"
+@layout LayoutLogin
+@using System.ComponentModel.DataAnnotations
+@inject HttpClient Http
+@inject SesionUsuario Sesion
+@inject NavigationManager Nav
+
+<PageTitle>Iniciar sesión</PageTitle>
+
+<div class="card shadow">
+    <div class="card-body p-4">
+        <h3 class="text-center mb-4">Punto de Venta</h3>
+
+        @if (mensajeError is not null)
+        {
+            <div class="alert alert-danger">@mensajeError</div>
+        }
+
+        <EditForm Model="peticion" OnValidSubmit="IniciarSesion">
+            <DataAnnotationsValidator />
+
+            <div class="mb-3">
+                <label class="form-label">Usuario</label>
+                <InputText class="form-control" @bind-Value="peticion.Usuario" />
+                <ValidationMessage For="() => peticion.Usuario" class="text-danger small" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Contraseña</label>
+                <InputText type="password" class="form-control" @bind-Value="peticion.Contrasena" />
+                <ValidationMessage For="() => peticion.Contrasena" class="text-danger small" />
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100" disabled="@cargando">
+                @(cargando ? "Ingresando..." : "Ingresar")
+            </button>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private LoginModel peticion = new();
+    private string? mensajeError;
+    private bool cargando;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Sesion.RestaurarAsync();
+
+        if (Sesion.EstaAutenticado)
+        {
+            Nav.NavigateTo("/");
+        }
+    }
+
+    private async Task IniciarSesion()
+    {
+        cargando = true;
+        mensajeError = null;
+
+        try
+        {
+            var respuesta = await Http.PostAsJsonAsync("auth/login", peticion);
+
+            if (respuesta.IsSuccessStatusCode)
+            {
+                var datos = await respuesta.Content.ReadFromJsonAsync<RespuestaLogin>();
+                if (datos is not null)
+                {
+                    await Sesion.IniciarAsync(datos.Token, datos.Usuario, datos.Expira);
+                    Nav.NavigateTo("/");
+                }
+            }
+            else if (respuesta.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                mensajeError = "Usuario o contraseña incorrectos.";
+            }
+            else
+            {
+                mensajeError = "No se pudo iniciar sesión. Intenta de nuevo.";
+            }
+        }
+        catch (Exception)
+        {
+            mensajeError = "No se pudo iniciar sesión. Intenta de nuevo en unos segundos.";
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    public class LoginModel
+    {
+        [Required(ErrorMessage = "El usuario es obligatorio")]
+        [StringLength(30, ErrorMessage = "Máximo 30 caracteres")]
+        public string Usuario { get; set; } = "";
+
+        [Required(ErrorMessage = "La contraseña es obligatoria")]
+        [StringLength(50, ErrorMessage = "Máximo 50 caracteres")]
+        public string Contrasena { get; set; } = "";
+    }
+
+    public record RespuestaLogin(string Token, string Usuario, DateTime Expira);
+}
