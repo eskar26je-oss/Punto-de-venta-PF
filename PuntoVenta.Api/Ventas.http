@@ -1,0 +1,70 @@
+@host = http://localhost:5280
+
+### 1) Login: copie el token de la respuesta y péguelo en @token
+POST {{host}}/api/Auth/login
+Content-Type: application/json
+
+{ "usuario": "admin", "contrasena": "Admin123" }
+
+###
+@token = PEGUE_AQUI_EL_TOKEN
+
+### Combos
+GET {{host}}/api/Ventas/clientes
+Authorization: Bearer {{token}}
+
+###
+GET {{host}}/api/Ventas/empleados
+Authorization: Bearer {{token}}
+
+###
+GET {{host}}/api/Ventas/productos
+Authorization: Bearer {{token}}
+
+### Listar ventas (filtros opcionales: buscar, desde, hasta)
+GET {{host}}/api/Ventas?desde=2026-01-01
+Authorization: Bearer {{token}}
+
+### Venta válida (el precio NO se envía; sale del producto)
+POST {{host}}/api/Ventas
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "fechaFactura": "2026-10-14", "idCliente": 1, "idEmpleado": 1,
+  "detalles": [ { "idProducto": 1, "cantidad": 1 } ] }
+
+### Debe fallar: cantidad mayor a la existencia -> 409 "Existencia insuficiente"
+POST {{host}}/api/Ventas
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "fechaFactura": "2026-10-14", "idCliente": 1, "idEmpleado": 1,
+  "detalles": [ { "idProducto": 1, "cantidad": 99999 } ] }
+
+### Debe fallar: cantidad 0 -> 400
+POST {{host}}/api/Ventas
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "fechaFactura": "2026-10-14", "idCliente": 1, "idEmpleado": 1,
+  "detalles": [ { "idProducto": 1, "cantidad": 0 } ] }
+
+### Consultar una venta
+GET {{host}}/api/Ventas/1
+Authorization: Bearer {{token}}
+
+### Modificar una venta
+PUT {{host}}/api/Ventas/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "fechaFactura": "2026-10-14", "idCliente": 2, "idEmpleado": 1,
+  "detalles": [ { "idProducto": 2, "cantidad": 2 } ] }
+
+### Anular una venta (devuelve la existencia)
+DELETE {{host}}/api/Ventas/1
+Authorization: Bearer {{token}}
+
+### Reporte de ventas
+GET {{host}}/api/reportes/ventas?desde=2026-01-01&hasta=2026-12-31
+Authorization: Bearer {{token}}
