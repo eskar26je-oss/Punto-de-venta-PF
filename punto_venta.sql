@@ -42,7 +42,7 @@ CREATE TABLE `clientes` (
 
 LOCK TABLES `clientes` WRITE;
 /*!40000 ALTER TABLE `clientes` DISABLE KEYS */;
-INSERT INTO `clientes` VALUES (1,'Juan Carlos','Pérez López','1234567-8',_binary '','5555-1111','juan.perez@correo.com','2026-10-06 21:12:01'),(2,'María Fernanda','Gómez Ruiz','7654321-0',_binary '\0','5555-2222','maria.gomez@correo.com','2026-10-06 21:12:01'),(3,'Consumidor','Final','CF',_binary '',NULL,NULL,'2026-10-06 21:12:01');
+INSERT INTO `clientes` VALUES (1,'Juan Carlos','Pérez López','1234567-8',_binary '','55551111','juan.perez@correo.com','2026-10-06 21:12:01'),(2,'María Fernanda','Gómez Ruiz','7654321-0',_binary '\0','55552222','maria.gomez@correo.com','2026-10-06 21:12:01'),(3,'Consumidor','Final','CF',_binary '',NULL,NULL,'2026-10-06 21:12:01');
 /*!40000 ALTER TABLE `clientes` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -139,7 +139,7 @@ CREATE TABLE `empleados` (
 
 LOCK TABLES `empleados` WRITE;
 /*!40000 ALTER TABLE `empleados` DISABLE KEYS */;
-INSERT INTO `empleados` VALUES (1,'Ana Lucía','Castillo Díaz','Zona 1, Guatemala','5555-3333','2456789010101',_binary '\0','1995-03-15',2,'2022-01-10','2026-10-06 21:12:01'),(2,'Carlos Eduardo','Ramírez Soto','Zona 10, Guatemala','5555-4444','2987654320101',_binary '','1990-07-22',1,'2020-06-01','2026-10-06 21:12:01'),(3,'Pedro José','Hernández Cruz','Mixco, Guatemala','5555-5555','3012345670101',_binary '','1988-11-05',3,'2021-03-15','2026-10-06 21:12:01');
+INSERT INTO `empleados` VALUES (1,'Ana Lucía','Castillo Díaz','Zona 1, Guatemala','55553333','2456789010101',_binary '\0','1995-03-15',2,'2022-01-10','2026-10-06 21:12:01'),(2,'Carlos Eduardo','Ramírez Soto','Zona 10, Guatemala','55554444','2987654320101',_binary '','1990-07-22',1,'2020-06-01','2026-10-06 21:12:01'),(3,'Pedro José','Hernández Cruz','Mixco, Guatemala','55555555','3012345670101',_binary '','1988-11-05',3,'2021-03-15','2026-10-06 21:12:01');
 /*!40000 ALTER TABLE `empleados` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -155,7 +155,7 @@ CREATE TABLE `marcas` (
   `marca` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
   PRIMARY KEY (`id_marca`),
   UNIQUE KEY `uq_marca` (`marca`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -194,7 +194,7 @@ CREATE TABLE `menu` (
 
 LOCK TABLES `menu` WRITE;
 /*!40000 ALTER TABLE `menu` DISABLE KEYS */;
-INSERT INTO `menu` VALUES (1,'Productos','/productos',NULL,1,_binary ''),(2,'Marcas','/marcas',1,1,_binary ''),(3,'Ventas','/ventas',NULL,2,_binary ''),(4,'Clientes','/clientes',3,1,_binary ''),(5,'Empleados','/empleados',3,2,_binary ''),(6,'Puestos','/puestos',5,1,_binary ''),(7,'Compras','/compras',NULL,3,_binary ''),(8,'Proveedores','/proveedores',7,1,_binary ''),(9,'Reportes','/reportes',NULL,4,_binary '');
+INSERT INTO `menu` VALUES (1,'Productos','/productos',NULL,1,_binary ''),(2,'Marcas ','/marcas',1,1,_binary ''),(3,'Ventas','/ventas',NULL,2,_binary ''),(4,'Clientes','/clientes',3,1,_binary ''),(5,'Empleados','/empleados',3,2,_binary ''),(6,'Puestos','/puestos',5,1,_binary ''),(7,'Compras','/compras',NULL,3,_binary ''),(8,'Proveedores','/proveedores',7,1,_binary ''),(9,'Reportes','/reportes',NULL,4,_binary '');
 /*!40000 ALTER TABLE `menu` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -220,7 +220,7 @@ CREATE TABLE `productos` (
   CONSTRAINT `fk_producto_marca` FOREIGN KEY (`id_marca`) REFERENCES `marcas` (`id_marca`),
   CONSTRAINT `ck_producto_existencia` CHECK ((`existencia` >= 0)),
   CONSTRAINT `ck_producto_precios` CHECK (((`precio_costo` >= 0) and (`precio_venta` >= 0)))
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -229,7 +229,7 @@ CREATE TABLE `productos` (
 
 LOCK TABLES `productos` WRITE;
 /*!40000 ALTER TABLE `productos` DISABLE KEYS */;
-INSERT INTO `productos` VALUES (1,'Monitor Samsung 24\"',1,'Monitor LED 24 pulgadas Full HD',NULL,800.00,1000.00,18,'2026-10-06 21:12:01'),(2,'Laptop HP 15',2,'Laptop 15.6\" 8GB RAM 256GB SSD',NULL,4000.00,5000.00,9,'2026-10-06 21:12:01'),(3,'Mouse Logitech M185',3,'Mouse inalámbrico',NULL,80.00,100.00,45,'2026-10-06 21:12:01'),(4,'Teclado Logitech K120',3,'Teclado USB en español',NULL,120.00,150.00,27,'2026-10-06 21:12:01'),(5,'Impresora HP DeskJet',2,'Impresora multifuncional',NULL,1200.00,1500.00,5,'2026-10-06 21:12:01'),(6,'Monitor Samsung 27\"',1,'Monitor LED 27 pulgadas',NULL,1200.00,1500.00,0,'2026-10-06 21:12:01');
+INSERT INTO `productos` VALUES (1,'Monitor Samsung 24\"',1,'Monitor LED 24 pulgadas Full HD','/images/productos/5c8212d.jpg',800.00,1000.00,18,'2026-10-06 21:12:01'),(2,'Laptop HP 15',2,'Laptop 15.6\" 8GB RAM 256GB SSD','/images/productos/64b1e89.jpg',4000.00,5000.00,9,'2026-10-06 21:12:01'),(3,'Mouse Logitech M185',3,'Mouse inalámbrico','/images/productos/d2ab0fb.webp',80.00,100.00,45,'2026-10-06 21:12:01'),(4,'Teclado Logitech K120',3,'Teclado USB en español','/images/productos/126488e.png',120.00,150.00,27,'2026-10-06 21:12:01'),(5,'Impresora HP DeskJet',2,'Impresora multifuncional','/images/productos/b1478b5.png',1200.00,1500.00,5,'2026-10-06 21:12:01'),(6,'Monitor Samsung 27\"',1,'Monitor LED 27 pulgadas','/images/productos/de6bd97.jpg',1200.00,1500.00,0,'2026-10-06 21:12:01'),(7,'Monitor Hp 24\"',2,'Monitor LED','/images/productos/cdf0fad.png',800.00,1000.00,25,'2026-10-14 00:00:00');
 /*!40000 ALTER TABLE `productos` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -248,7 +248,7 @@ CREATE TABLE `proveedores` (
   `telefono` varchar(25) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`id_proveedor`),
   UNIQUE KEY `uq_proveedor_nit` (`nit`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -257,7 +257,7 @@ CREATE TABLE `proveedores` (
 
 LOCK TABLES `proveedores` WRITE;
 /*!40000 ALTER TABLE `proveedores` DISABLE KEYS */;
-INSERT INTO `proveedores` VALUES (1,'Distribuidora Tecnológica, S.A.','1111111-1','Zona 4, Guatemala','2222-1111'),(2,'Importaciones HP Guatemala','2222222-2','Zona 9, Guatemala','2222-2222'),(3,'Logitech Centroamérica','3333333-3','Zona 12, Guatemala','2222-3333');
+INSERT INTO `proveedores` VALUES (1,'Distribuidora Tecnológica, S.A.','1111111-2','Zona 4, Guatemala','22221111'),(2,'Importaciones HP Guatemala','2222222-2','Zona 9, Guatemala','22222222'),(3,'Logitech Centroamérica','3333333-3','Zona 12, Guatemala','22223333'),(5,'Distribuidora Tecnológica,','1111111-5','San Miguel petapa','00000000');
 /*!40000 ALTER TABLE `proveedores` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -304,7 +304,7 @@ CREATE TABLE `usuarios` (
   UNIQUE KEY `uq_usuario` (`usuario`),
   KEY `fk_usuario_empleado` (`id_empleado`),
   CONSTRAINT `fk_usuario_empleado` FOREIGN KEY (`id_empleado`) REFERENCES `empleados` (`id_empleado`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -313,6 +313,7 @@ CREATE TABLE `usuarios` (
 
 LOCK TABLES `usuarios` WRITE;
 /*!40000 ALTER TABLE `usuarios` DISABLE KEYS */;
+INSERT INTO `usuarios` VALUES (1,'admin','$2a$11$0iNZeUCA8.DYUuobqMAFBOV5dBd/fJZ0RmbFgBqqRB9MlAfvu.pUG',_binary '',NULL,'2026-10-06 23:22:04');
 /*!40000 ALTER TABLE `usuarios` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -391,4 +392,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-10-06 21:33:42
+-- Dump completed on 2026-10-14 20:14:38
