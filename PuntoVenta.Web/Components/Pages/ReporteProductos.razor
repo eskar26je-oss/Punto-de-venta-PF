@@ -1,0 +1,174 @@
+@page "/reportes/productos"
+@inject HttpClient Http
+@inject SesionUsuario Sesion
+@inject NavigationManager Nav
+
+<PageTitle>Reporte de productos</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0">Reporte de productos</h3>
+    <div class="no-imprimir">
+        <a class="btn btn-outline-secondary btn-sm me-2" href="reportes">Volver a Reportes</a>
+        <button class="btn btn-primary btn-sm" onclick="window.print()">Imprimir</button>
+    </div>
+</div>
+
+<p class="text-muted small">Generado el @DateTime.Now.ToString("dd/MM/yyyy HH:mm")</p>
+
+@if (mensajeError is not null)
+{
+    <div class="alert alert-danger">@mensajeError</div>
+}
+
+<div class="row g-2 mb-3 no-imprimir">
+    <div class="col-md-5">
+        <input class="form-control" placeholder="Buscar producto..." @bind="buscar" @bind:event="oninput" />
+    </div>
+    <div class="col-md-4">
+        <select class="form-select" @bind="marcaFiltro">
+            <option value="">Todas las marcas</option>
+            @foreach (var marca in Marcas)
+            {
+                <option value="@marca">@marca</option>
+            }
+        </select>
+    </div>
+    <div class="col-md-3">
+        <button class="btn btn-outline-secondary w-100" @onclick="Limpiar">Limpiar filtros</button>
+    </div>
+</div>
+
+@if (cargando)
+{
+    <p><em>Cargando...</em></p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped table-hover align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>Producto</th>
+                    <th>Marca</th>
+                    <th class="text-end">Existencia</th>
+                    <th class="text-end">Precio Costo</th>
+                    <th class="text-end">Precio Venta</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Filtradas.Any())
+                {
+                    <tr>
+                        <td colspan="5" class="text-center text-muted">No hay datos para mostrar</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var fila in Filtradas)
+                    {
+                        <tr>
+                            <td>@fila.Producto</td>
+                            <td>@fila.Marca</td>
+                            <td class="text-end">@fila.Existencia</td>
+                            <td class="text-end">Q @fila.PrecioCosto.ToString("N2")</td>
+                            <td class="text-end">Q @fila.PrecioVenta.ToString("N2")</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="row g-3 mt-1">
+        <div class="col-md-3">
+            <div class="border rounded p-3">
+                <div class="text-muted small">Productos</div>
+                <div class="fs-5 fw-bold">@Filtradas.Count()</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="border rounded p-3">
+                <div class="text-muted small">Unidades en existencia</div>
+                <div class="fs-5 fw-bold">@Filtradas.Sum(f => f.Existencia)</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="border rounded p-3">
+                <div class="text-muted small">Valor a precio de costo</div>
+                <div class="fs-5 fw-bold">Q @ValorCosto.ToString("N2")</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="border rounded p-3">
+                <div class="text-muted small">Valor a precio de venta</div>
+                <div class="fs-5 fw-bold">Q @ValorVenta.ToString("N2")</div>
+            </div>
+        </div>
+    </div>
+}
+@code {
+    private List<FilaReporte> datos = new();
+    private bool cargando = true;
+    private string? mensajeError;
+    private string buscar = "";
+    private string marcaFiltro = "";
+
+    private IEnumerable<string> Marcas => datos.Select(d => d.Marca).Distinct().OrderBy(m => m);
+
+    private IEnumerable<FilaReporte> Filtradas =>
+        datos.Where(d =>
+            (string.IsNullOrWhiteSpace(buscar) || d.Producto.Contains(buscar.Trim(), StringComparison.OrdinalIgnoreCase))
+            && (marcaFiltro == "" || d.Marca == marcaFiltro));
+
+    private decimal ValorCosto => Filtradas.Sum(f => f.Existencia * f.PrecioCosto);
+
+    private decimal ValorVenta => Filtradas.Sum(f => f.Existencia * f.PrecioVenta);
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var respuesta = await Http.GetAsync("Reportes/productos");
+
+            if (respuesta.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                Sesion.Cerrar();
+                Nav.NavigateTo("/login");
+                return;
+            }
+
+            if (respuesta.IsSuccessStatusCode)
+            {
+                datos = await respuesta.Content.ReadFromJsonAsync<List<FilaReporte>>() ?? new();
+            }
+            else
+            {
+                mensajeError = "No se pudo cargar el reporte.";
+            }
+        }
+        catch (Exception ex)
+        {
+            mensajeError = $"No se pudo conectar con la API: {ex.Message}";
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private void Limpiar()
+    {
+        buscar = "";
+        marcaFiltro = "";
+    }
+
+    public class FilaReporte
+    {
+        public int IdProducto { get; set; }
+        public string Producto { get; set; } = "";
+        public string Marca { get; set; } = "";
+        public int Existencia { get; set; }
+        public decimal PrecioCosto { get; set; }
+        public decimal PrecioVenta { get; set; }
+    }
+}

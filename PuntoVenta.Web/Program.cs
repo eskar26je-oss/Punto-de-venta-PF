@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Microsoft.Extensions.FileProviders;
 using PuntoVenta.Web.Components;
 using PuntoVenta.Web.Servicios;
 
@@ -46,6 +47,16 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
+
+var carpetaFotos = Path.GetFullPath(
+    Path.Combine(app.Environment.ContentRootPath, "..", "FotosProductos"));
+Directory.CreateDirectory(carpetaFotos);
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(carpetaFotos),
+    RequestPath = "/images/productos"
+});
 
 app.UseAntiforgery();
 
