@@ -1,0 +1,46 @@
+@host = http://localhost:5280
+
+### 1) Login: copie el token de la respuesta y péguelo en @token
+POST {{host}}/api/Auth/login
+Content-Type: application/json
+
+{ "usuario": "admin", "contrasena": "Admin123" }
+
+###
+@token = PEGUE_AQUI_EL_TOKEN
+
+### Combos
+GET {{host}}/api/Compras/proveedores
+Authorization: Bearer {{token}}
+
+###
+GET {{host}}/api/Compras/productos
+Authorization: Bearer {{token}}
+
+### Listar compras (filtros opcionales: buscar, desde, hasta)
+GET {{host}}/api/Compras?desde=2026-01-01
+Authorization: Bearer {{token}}
+
+### Ver una compra con su detalle
+GET {{host}}/api/Compras/1
+Authorization: Bearer {{token}}
+
+### Compra válida (aquí SÍ se envía el costo unitario)
+POST {{host}}/api/Compras
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "fechaOrden": "2026-10-16", "idProveedor": 1,
+  "detalles": [ { "idProducto": 1, "cantidad": 5, "precioCostoUnitario": 790.00 } ] }
+
+### Debe fallar: costo en cero -> 400
+POST {{host}}/api/Compras
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "fechaOrden": "2026-10-16", "idProveedor": 1,
+  "detalles": [ { "idProducto": 1, "cantidad": 5, "precioCostoUnitario": 0 } ] }
+
+### Reporte de compras (filtros opcionales: desde, hasta, idProveedor)
+GET {{host}}/api/reportes/compras?desde=2026-01-01&idProveedor=1
+Authorization: Bearer {{token}}
