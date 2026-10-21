@@ -35,7 +35,7 @@ public record VentaDetalleDto(
 
 public record VentaDto(
     int IdVenta, string Serie, int NoFactura, DateOnly FechaFactura,
-    int IdCliente, string Cliente, int IdEmpleado, string Empleado,
+    int IdCliente, string Cliente, string ClienteNit, int IdEmpleado, string Empleado,
     decimal Total, List<VentaDetalleDto> Detalles);
 
 public record VentaResumenDto(

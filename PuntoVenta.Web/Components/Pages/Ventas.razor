@@ -1,15 +1,49 @@
 @page "/ventas"
+@using System.Text.RegularExpressions
 @inject HttpClient Http
 @inject SesionUsuario Sesion
 @inject NavigationManager Nav
+@inject IJSRuntime JS
 
 <PageTitle>Ventas</PageTitle>
 
-<h3 class="mb-3">Ventas</h3>
+<style>
+    .factura-contenedor { max-width: 720px; margin: 0 auto; }
+    .factura { background: #fff; color: #1d2a35; border: 1px solid #d5dde3; border-radius: 12px;
+               box-shadow: 0 4px 18px rgba(0,0,0,.08); overflow: hidden; }
+    .factura-encabezado { background: #1d2a35; color: #fff; text-align: center; padding: 18px 12px;
+                          -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .factura-negocio { font-size: 1.4rem; font-weight: 700; letter-spacing: .08em; }
+    .factura-titulo { opacity: .85; font-size: .95rem; }
+    .factura-datos { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 18px; padding: 16px 22px;
+                     border-bottom: 1px dashed #c3ccd3; }
+    .factura-datos span { display: block; font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; color: #6b7a86; }
+    .factura-datos strong { font-size: 1rem; }
+    .factura-datos .ancho { grid-column: 1 / -1; }
+    .factura-tabla { width: 100%; border-collapse: collapse; font-size: .92rem; }
+    .factura-tabla th { background: #eef3f6; padding: 8px 12px; font-size: .75rem; text-transform: uppercase;
+                        letter-spacing: .04em; color: #44525e; border-bottom: 1px solid #d5dde3;
+                        -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .factura-tabla td { padding: 8px 12px; border-bottom: 1px solid #edf1f4; }
+    .factura-total { display: flex; justify-content: space-between; align-items: baseline; padding: 14px 22px;
+                     background: #eef3f6; font-size: 1.3rem; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .factura-pie { text-align: center; padding: 16px; color: #5b6b78; border-top: 1px dashed #c3ccd3; }
+    .factura-acciones { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 16px; }
+
+    @@media print {
+        .sidebar, .top-row, header, nav { display: none !important; }
+        body * { visibility: hidden; }
+        .factura, .factura * { visibility: visible; }
+        .factura { position: absolute; left: 0; top: 0; width: 100%; border: none; box-shadow: none; border-radius: 0; }
+        .no-imprimir { display: none !important; }
+    }
+</style>
+
+<h3 class="mb-3 no-imprimir">Ventas</h3>
 
 @if (mensajeError is not null)
 {
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+    <div class="alert alert-danger alert-dismissible fade show no-imprimir" role="alert">
         @mensajeError
         <button type="button" class="btn-close" @onclick="() => mensajeError = null"></button>
     </div>
@@ -17,7 +51,7 @@
 
 @if (mensajeOk is not null)
 {
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
+    <div class="alert alert-success alert-dismissible fade show no-imprimir" role="alert">
         @mensajeOk
         <button type="button" class="btn-close" @onclick="() => mensajeOk = null"></button>
     </div>
@@ -26,6 +60,81 @@
 @if (cargando)
 {
     <p><em>Cargando...</em></p>
+}
+else if (factura is not null)
+{
+    @* ===================== FACTURA ===================== *@
+    <div class="factura-contenedor">
+        <div class="factura">
+            <div class="factura-encabezado">
+                <div class="factura-negocio">@NombreNegocio</div>
+                <div class="factura-titulo">Factura de Venta</div>
+            </div>
+
+            <div class="factura-datos">
+                <div>
+                    <span>Factura</span>
+                    <strong>@factura.Serie-@factura.NoFactura</strong>
+                </div>
+                <div>
+                    <span>Fecha</span>
+                    <strong>@factura.FechaFactura.ToString("dd/MM/yyyy")</strong>
+                </div>
+                <div class="ancho">
+                    <span>Cliente</span>
+                    <strong>@factura.Cliente</strong>
+                </div>
+                <div>
+                    <span>NIT</span>
+                    <strong>@factura.ClienteNit</strong>
+                </div>
+                <div>
+                    <span>Cajero</span>
+                    <strong>@factura.Empleado</strong>
+                </div>
+            </div>
+
+            <table class="factura-tabla">
+                <thead>
+                    <tr>
+                        <th style="text-align:left;">Cód</th>
+                        <th style="text-align:left;">Producto</th>
+                        <th style="text-align:right;">Cant</th>
+                        <th style="text-align:right;">Precio</th>
+                        <th style="text-align:right;">Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var d in factura.Detalles)
+                    {
+                        <tr>
+                            <td>@d.IdProducto</td>
+                            <td>@d.Producto</td>
+                            <td style="text-align:right;">@d.Cantidad</td>
+                            <td style="text-align:right;">@Q(d.PrecioUnitario)</td>
+                            <td style="text-align:right;">@Q(d.Subtotal)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            <div class="factura-total">
+                <span>TOTAL</span>
+                <strong>@Q(factura.Total)</strong>
+            </div>
+
+            <div class="factura-pie">
+                <div><strong>** Gracias por su compra **</strong></div>
+                <div>Vuelva pronto</div>
+            </div>
+        </div>
+
+        <div class="factura-acciones no-imprimir">
+            <button type="button" class="btn btn-primary" @onclick="Imprimir">Imprimir</button>
+            <button type="button" class="btn btn-success" @onclick="NuevaVenta">Nueva venta</button>
+            <button type="button" class="btn btn-outline-secondary" @onclick="CerrarFactura">Volver a la lista</button>
+        </div>
+    </div>
 }
 else if (!modoFormulario)
 {
@@ -50,7 +159,7 @@ else if (!modoFormulario)
                     <th>Cliente</th>
                     <th>Empleado</th>
                     <th class="text-end">Total</th>
-                    <th class="text-center" style="width: 200px;">Acciones</th>
+                    <th class="text-center" style="width: 270px;">Acciones</th>
                 </tr>
             </thead>
             <tbody>
@@ -69,6 +178,7 @@ else if (!modoFormulario)
                             <td>@v.Empleado</td>
                             <td class="text-end">@Q(v.Total)</td>
                             <td class="text-center">
+                                <button class="btn btn-sm btn-outline-primary me-1" @onclick="() => VerFactura(v.IdVenta)">Factura</button>
                                 <button class="btn btn-sm btn-warning me-1" @onclick="() => Editar(v.IdVenta)">Editar</button>
                                 <button class="btn btn-sm btn-danger" @onclick="() => PedirAnular(v)">Anular</button>
                             </td>
@@ -116,19 +226,9 @@ else
             <div class="row g-3">
                 <div class="col-md-4">
                     <label class="form-label">Fecha</label>
-                    <input type="date" class="form-control" @bind="fecha" max="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                    <CampoFecha @bind-Value="fecha" />
                 </div>
-                <div class="col-md-4">
-                    <label class="form-label">Cliente</label>
-                    <select class="form-select" @bind="idCliente">
-                        <option value="0">-- Seleccione --</option>
-                        @foreach (var c in clientes)
-                        {
-                            <option value="@c.Id">@c.Nombre (NIT: @c.Detalle)</option>
-                        }
-                    </select>
-                </div>
-                <div class="col-md-4">
+                <div class="col-md-8">
                     <label class="form-label">Empleado</label>
                     <select class="form-select" @bind="idEmpleado">
                         <option value="0">-- Seleccione --</option>
@@ -138,37 +238,117 @@ else
                         }
                     </select>
                 </div>
+
+                <div class="col-12">
+                    <label class="form-label">Cliente (búsqueda por NIT)</label>
+
+                    @if (clienteSel is null)
+                    {
+                        <div class="input-group">
+                            <input class="form-control" maxlength="12" placeholder="Escriba el NIT y presione Enter (ej. 1234567-8 o CF)"
+                                   value="@nitBusqueda" @oninput="AlEscribirNit" @onkeydown="NitKey" />
+                            <button type="button" class="btn btn-primary" @onclick="BuscarCliente">Buscar</button>
+                            <button type="button" class="btn btn-outline-secondary" @onclick="UsarConsumidorFinal">Consumidor final (CF)</button>
+                        </div>
+
+                        @if (mensajeNit is not null)
+                        {
+                            <div class="form-text text-danger">@mensajeNit</div>
+                        }
+
+                        @if (mostrarNuevoCliente)
+                        {
+                            <div class="border rounded p-3 mt-2 bg-light">
+                                <div class="alert alert-warning py-2">
+                                    No existe un cliente con el NIT <strong>@nuevoCliente.Nit</strong>. Complete los datos para agregarlo.
+                                </div>
+
+                                @if (errorNuevoCliente is not null)
+                                {
+                                    <div class="alert alert-danger py-2">@errorNuevoCliente</div>
+                                }
+
+                                <div class="row g-2">
+                                    <div class="col-md-4">
+                                        <label class="form-label">Nombres</label>
+                                        <input class="form-control" maxlength="60" @bind="nuevoCliente.Nombres" />
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Apellidos</label>
+                                        <input class="form-control" maxlength="60" @bind="nuevoCliente.Apellidos" />
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Género</label>
+                                        <select class="form-select" @bind="nuevoCliente.Genero">
+                                            <option value="-1">-- Seleccione --</option>
+                                            <option value="1">Masculino</option>
+                                            <option value="0">Femenino</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Teléfono (opcional, 8 dígitos)</label>
+                                        <input class="form-control" maxlength="8" inputmode="numeric" @bind="nuevoCliente.Telefono" />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Correo electrónico (opcional)</label>
+                                        <input class="form-control" maxlength="45" @bind="nuevoCliente.Correo" />
+                                    </div>
+                                </div>
+
+                                <div class="text-end mt-3">
+                                    <button type="button" class="btn btn-secondary" @onclick="CancelarNuevoCliente">Cancelar</button>
+                                    <button type="button" class="btn btn-primary" @onclick="GuardarNuevoCliente" disabled="@guardandoCliente">
+                                        @(guardandoCliente ? "Guardando..." : "Guardar y usar cliente")
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="alert alert-success py-2 mb-0 d-flex justify-content-between align-items-center">
+                            <div><strong>@clienteSel.Nombre</strong> · NIT: @clienteSel.Detalle</div>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="CambiarCliente">Cambiar</button>
+                        </div>
+                    }
+                </div>
             </div>
 
             <hr />
             <h6>Productos de la venta</h6>
 
             <div class="row g-2 align-items-end mb-1">
-                <div class="col-md-6">
+                <div class="col-md-2">
+                    <label class="form-label">Código</label>
+                    <input class="form-control" @ref="codigoRef" inputmode="numeric" placeholder="Código"
+                           value="@codigoTexto" @oninput="AlEscribirCodigo" @onkeydown="CodigoKey" />
+                </div>
+                <div class="col-md-5">
                     <label class="form-label">Producto</label>
-                    <select class="form-select" @bind="idProductoSel">
+                    <select class="form-select" @bind="ProductoElegido">
                         <option value="0">-- Seleccione --</option>
                         @foreach (var p in productos)
                         {
                             <option value="@p.IdProducto" disabled="@(Disponible(p) <= 0)">
-                                @p.Producto - @Q(p.PrecioVenta) (Existencia: @Disponible(p))
+                                @p.IdProducto · @p.Producto - @Q(p.PrecioVenta) (Existencia: @Disponible(p))
                             </option>
                         }
                     </select>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label class="form-label">Cantidad</label>
-                    <input type="number" min="1" class="form-control" @bind="cantidadSel" />
+                    <input class="form-control" @ref="cantidadRef" inputmode="numeric"
+                           value="@cantidadTexto" @oninput="AlEscribirCantidad" @onkeydown="CantidadKey" />
                 </div>
                 <div class="col-md-3">
-                    <button type="button" class="btn btn-success w-100" @onclick="AgregarLinea">Agregar</button>
+                    <button type="button" class="btn btn-success w-100" @onclick="AgregarYVolver">Agregar</button>
                 </div>
             </div>
 
             @if (ProductoSeleccionado is not null)
             {
                 <div class="form-text mb-2">
-                    Precio de venta: @Q(ProductoSeleccionado.PrecioVenta) · Disponible: @Disponible(ProductoSeleccionado)
+                    Código @ProductoSeleccionado.IdProducto · Precio de venta: @Q(ProductoSeleccionado.PrecioVenta) · Disponible: @Disponible(ProductoSeleccionado)
                 </div>
             }
 
@@ -181,6 +361,7 @@ else
                 <table class="table table-sm table-bordered align-middle">
                     <thead class="table-light">
                         <tr>
+                            <th>Cód</th>
                             <th>Producto</th>
                             <th class="text-end">Precio</th>
                             <th class="text-end">Cantidad</th>
@@ -191,13 +372,14 @@ else
                     <tbody>
                         @if (!lineas.Any())
                         {
-                            <tr><td colspan="5" class="text-center text-muted">Aún no hay productos agregados</td></tr>
+                            <tr><td colspan="6" class="text-center text-muted">Aún no hay productos agregados</td></tr>
                         }
                         else
                         {
                             @foreach (var l in lineas)
                             {
                                 <tr>
+                                    <td>@l.IdProducto</td>
                                     <td>@l.Producto</td>
                                     <td class="text-end">@Q(l.PrecioUnitario)</td>
                                     <td class="text-end">@l.Cantidad</td>
@@ -211,7 +393,7 @@ else
                     </tbody>
                     <tfoot>
                         <tr>
-                            <th colspan="3" class="text-end">Total de la venta</th>
+                            <th colspan="4" class="text-end">Total de la venta</th>
                             <th class="text-end">@Q(Total)</th>
                             <th></th>
                         </tr>
@@ -257,6 +439,14 @@ else
 }
 
 @code {
+    // Nombre que aparece en el encabezado de la factura (cámbielo por el de su negocio).
+    private const string NombreNegocio = "PUNTO DE VENTA";
+
+    // Mismas reglas que valida la API de clientes.
+    private const string PatronNit = @"^([0-9]{1,10}-?[0-9Kk]|[Cc][Ff])$";
+    private const string PatronNombre = @"^[A-Za-zÁÉÍÓÚáéíóúÑñÜü ]+$";
+    private const string PatronCorreo = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
+
     // ----- Datos -----
     private List<VentaResumenModel> ventas = new();
     private List<OpcionModel> clientes = new();
@@ -272,6 +462,7 @@ else
     private string? mensajeOk;
     private string? errorForm;
     private string? errorLinea;
+    private VentaModel? factura;
 
     // ----- Lista: búsqueda y paginación -----
     private string _buscar = "";
@@ -298,16 +489,40 @@ else
     // ----- Formulario -----
     private int? editandoId;
     private string etiquetaEdicion = "";
-    private DateTime fecha = DateTime.Today;
-    private int idCliente;
+    private DateTime? fecha = DateTime.Today;
     private int idEmpleado;
-    private int idProductoSel;
-    private int cantidadSel = 1;
     private List<LineaVenta> lineas = new();
     // Cantidades que ya tenía la venta que se está editando (se devuelven al inventario al guardar).
     private Dictionary<int, int> cantidadOriginal = new();
 
+    // ----- Cliente por NIT -----
+    private OpcionModel? clienteSel;
+    private string nitBusqueda = "";
+    private string? mensajeNit;
+    private bool mostrarNuevoCliente;
+    private bool guardandoCliente;
+    private string? errorNuevoCliente;
+    private NuevoClienteModel nuevoCliente = new();
+
+    // ----- Producto por código -----
+    private int idProductoSel;
+    private string codigoTexto = "";
+    private string cantidadTexto = "1";
+    private ElementReference codigoRef;
+    private ElementReference cantidadRef;
+
     private VentaResumenModel? ventaAAnular;
+
+    private int ProductoElegido
+    {
+        get => idProductoSel;
+        set
+        {
+            idProductoSel = value;
+            codigoTexto = value > 0 ? value.ToString() : "";
+            errorLinea = null;
+        }
+    }
 
     private ProductoModel? ProductoSeleccionado =>
         productos.FirstOrDefault(p => p.IdProducto == idProductoSel);
@@ -325,9 +540,9 @@ else
         await CargarTodo();
     }
 
-    private async Task CargarTodo()
+    private async Task CargarTodo(bool mostrarCargando = true)
     {
-        cargando = true;
+        if (mostrarCargando) cargando = true;
         try
         {
             ventas = await Obtener<List<VentaResumenModel>>("Ventas") ?? new();
@@ -373,11 +588,35 @@ else
         paginaActual = pagina;
     }
 
+    // ===================== Factura =====================
+
+    private async Task VerFactura(int id)
+    {
+        mensajeOk = null;
+        var venta = await Obtener<VentaModel>($"Ventas/{id}");
+        if (venta is null) return;
+
+        factura = venta;
+        modoFormulario = false;
+    }
+
+    private void CerrarFactura()
+    {
+        factura = null;
+        modoFormulario = false;
+    }
+
+    private async Task Imprimir()
+    {
+        await JS.InvokeVoidAsync("print");
+    }
+
     // ===================== Nueva / editar =====================
 
     private void NuevaVenta()
     {
         LimpiarFormulario();
+        factura = null;
         modoFormulario = true;
     }
 
@@ -391,8 +630,8 @@ else
         editandoId = venta.IdVenta;
         etiquetaEdicion = $"{venta.Serie}-{venta.NoFactura}";
         fecha = venta.FechaFactura.ToDateTime(TimeOnly.MinValue);
-        idCliente = venta.IdCliente;
         idEmpleado = venta.IdEmpleado;
+        clienteSel = new OpcionModel { Id = venta.IdCliente, Nombre = venta.Cliente, Detalle = venta.ClienteNit };
         cantidadOriginal = venta.Detalles
             .GroupBy(d => d.IdProducto)
             .ToDictionary(g => g.Key, g => g.Sum(d => d.Cantidad));
@@ -406,6 +645,7 @@ else
             PrecioUnitario = productos.FirstOrDefault(p => p.IdProducto == d.IdProducto)?.PrecioVenta ?? d.PrecioUnitario
         }).ToList();
 
+        factura = null;
         modoFormulario = true;
     }
 
@@ -414,10 +654,16 @@ else
         editandoId = null;
         etiquetaEdicion = "";
         fecha = DateTime.Today;
-        idCliente = 0;
         idEmpleado = 0;
+        clienteSel = null;
+        nitBusqueda = "";
+        mensajeNit = null;
+        mostrarNuevoCliente = false;
+        errorNuevoCliente = null;
+        nuevoCliente = new();
         idProductoSel = 0;
-        cantidadSel = 1;
+        codigoTexto = "";
+        cantidadTexto = "1";
         lineas = new();
         cantidadOriginal = new();
         errorForm = null;
@@ -429,7 +675,224 @@ else
         modoFormulario = false;
     }
 
-    // ===================== Detalle =====================
+    // ===================== Cliente por NIT =====================
+
+    private static string NormalizarNit(string? nit) =>
+        (nit ?? "").Replace("-", "").Replace(" ", "").Trim().ToUpperInvariant();
+
+    private void AlEscribirNit(ChangeEventArgs e)
+    {
+        nitBusqueda = e.Value?.ToString() ?? "";
+        mensajeNit = null;
+    }
+
+    private async Task NitKey(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") await BuscarCliente();
+    }
+
+    private async Task UsarConsumidorFinal()
+    {
+        nitBusqueda = "CF";
+        await BuscarCliente();
+    }
+
+    private async Task BuscarCliente()
+    {
+        errorForm = null;
+        mensajeNit = null;
+        mostrarNuevoCliente = false;
+        errorNuevoCliente = null;
+
+        var nit = nitBusqueda.Trim().ToUpperInvariant();
+        if (nit.Length == 0)
+        {
+            mensajeNit = "Escriba un NIT para buscar.";
+            return;
+        }
+        if (!Regex.IsMatch(nit, PatronNit))
+        {
+            mensajeNit = "NIT inválido. Ejemplo: 1234567-8 o CF.";
+            return;
+        }
+
+        var normalizado = NormalizarNit(nit);
+        var encontrado = clientes.FirstOrDefault(c => NormalizarNit(c.Detalle) == normalizado);
+
+        if (encontrado is null)
+        {
+            // Por si otro usuario lo registró hace un momento.
+            clientes = await Obtener<List<OpcionModel>>("Ventas/clientes") ?? clientes;
+            encontrado = clientes.FirstOrDefault(c => NormalizarNit(c.Detalle) == normalizado);
+        }
+
+        if (encontrado is not null)
+        {
+            clienteSel = encontrado;
+            nitBusqueda = "";
+            return;
+        }
+
+        // No existe: se ofrece agregarlo.
+        nuevoCliente = new NuevoClienteModel { Nit = nit };
+        if (normalizado == "CF")
+        {
+            nuevoCliente.Nombres = "Consumidor";
+            nuevoCliente.Apellidos = "Final";
+            nuevoCliente.Genero = 1;
+        }
+        mostrarNuevoCliente = true;
+    }
+
+    private void CambiarCliente()
+    {
+        clienteSel = null;
+        nitBusqueda = "";
+        mensajeNit = null;
+        mostrarNuevoCliente = false;
+    }
+
+    private void CancelarNuevoCliente()
+    {
+        mostrarNuevoCliente = false;
+        errorNuevoCliente = null;
+    }
+
+    private async Task GuardarNuevoCliente()
+    {
+        errorNuevoCliente = null;
+
+        var c = nuevoCliente;
+        c.Nombres = (c.Nombres ?? "").Trim();
+        c.Apellidos = (c.Apellidos ?? "").Trim();
+        c.Telefono = (c.Telefono ?? "").Trim();
+        c.Correo = (c.Correo ?? "").Trim();
+
+        if (c.Nombres.Length == 0 || c.Apellidos.Length == 0)
+        {
+            errorNuevoCliente = "Los nombres y apellidos son obligatorios.";
+            return;
+        }
+        if (!Regex.IsMatch(c.Nombres, PatronNombre) || !Regex.IsMatch(c.Apellidos, PatronNombre))
+        {
+            errorNuevoCliente = "Los nombres y apellidos solo pueden contener letras.";
+            return;
+        }
+        if (c.Genero != 0 && c.Genero != 1)
+        {
+            errorNuevoCliente = "Seleccione el género.";
+            return;
+        }
+        if (c.Telefono.Length > 0 && !Regex.IsMatch(c.Telefono, @"^[0-9]{8}$"))
+        {
+            errorNuevoCliente = "El teléfono debe tener exactamente 8 dígitos.";
+            return;
+        }
+        if (c.Correo.Length > 0 && !Regex.IsMatch(c.Correo, PatronCorreo))
+        {
+            errorNuevoCliente = "El correo electrónico no es válido.";
+            return;
+        }
+
+        guardandoCliente = true;
+        try
+        {
+            var cuerpo = new
+            {
+                nombres = c.Nombres,
+                apellidos = c.Apellidos,
+                nit = c.Nit,
+                genero = c.Genero,
+                telefono = c.Telefono.Length == 0 ? null : c.Telefono,
+                correoElectronico = c.Correo.Length == 0 ? null : c.Correo
+            };
+
+            var respuesta = await Http.PostAsJsonAsync("Clientes", cuerpo);
+            if (SesionVencida(respuesta)) return;
+
+            if (respuesta.IsSuccessStatusCode)
+            {
+                var creado = await respuesta.Content.ReadFromJsonAsync<ClienteCreadoModel>();
+                clientes = await Obtener<List<OpcionModel>>("Ventas/clientes") ?? clientes;
+                clienteSel = clientes.FirstOrDefault(x => x.Id == creado?.IdCliente)
+                    ?? new OpcionModel
+                    {
+                        Id = creado?.IdCliente ?? 0,
+                        Nombre = $"{creado?.Nombres} {creado?.Apellidos}",
+                        Detalle = creado?.Nit
+                    };
+                mostrarNuevoCliente = false;
+                nitBusqueda = "";
+                mensajeOk = "Cliente agregado y seleccionado para la venta.";
+            }
+            else
+            {
+                errorNuevoCliente = await LeerMensaje(respuesta, "No se pudo guardar el cliente.");
+
+                // Si el NIT ya existía (otro usuario lo creó), se usa ese cliente.
+                clientes = await Obtener<List<OpcionModel>>("Ventas/clientes") ?? clientes;
+                var existente = clientes.FirstOrDefault(x => NormalizarNit(x.Detalle) == NormalizarNit(c.Nit));
+                if (existente is not null)
+                {
+                    clienteSel = existente;
+                    mostrarNuevoCliente = false;
+                    errorNuevoCliente = null;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            errorNuevoCliente = $"Error al guardar el cliente: {ex.Message}";
+        }
+        finally
+        {
+            guardandoCliente = false;
+        }
+    }
+
+    // ===================== Producto por código / detalle =====================
+
+    private void AlEscribirCodigo(ChangeEventArgs e)
+    {
+        codigoTexto = (e.Value?.ToString() ?? "").Trim();
+        errorLinea = null;
+
+        if (int.TryParse(codigoTexto, out var codigo) && productos.Any(p => p.IdProducto == codigo))
+            idProductoSel = codigo;
+        else
+            idProductoSel = 0;
+    }
+
+    private async Task CodigoKey(KeyboardEventArgs e)
+    {
+        if (e.Key != "Enter") return;
+
+        if (idProductoSel == 0)
+        {
+            errorLinea = codigoTexto.Length == 0
+                ? "Escriba el código del producto."
+                : $"No existe un producto con el código {codigoTexto}.";
+            return;
+        }
+
+        await cantidadRef.FocusAsync();
+    }
+
+    private void AlEscribirCantidad(ChangeEventArgs e)
+    {
+        cantidadTexto = (e.Value?.ToString() ?? "").Trim();
+    }
+
+    private async Task CantidadKey(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") await AgregarYVolver();
+    }
+
+    private async Task AgregarYVolver()
+    {
+        AgregarLinea();
+        if (errorLinea is null) await codigoRef.FocusAsync();
+    }
 
     private void AgregarLinea()
     {
@@ -437,18 +900,25 @@ else
 
         if (idProductoSel == 0)
         {
-            errorLinea = "Seleccione un producto.";
+            errorLinea = codigoTexto.Length > 0
+                ? $"No existe un producto con el código {codigoTexto}."
+                : "Seleccione un producto o escriba su código.";
             return;
         }
-        if (cantidadSel <= 0)
+        if (!int.TryParse(cantidadTexto, out var cantidad) || cantidad <= 0)
         {
-            errorLinea = "La cantidad debe ser mayor a cero.";
+            errorLinea = "La cantidad debe ser un número entero mayor a cero.";
+            return;
+        }
+        if (cantidad > 100000)
+        {
+            errorLinea = "La cantidad es demasiado grande.";
             return;
         }
 
         var producto = productos.First(p => p.IdProducto == idProductoSel);
         var existente = lineas.FirstOrDefault(l => l.IdProducto == producto.IdProducto);
-        var cantidadTotal = cantidadSel + (existente?.Cantidad ?? 0);
+        var cantidadTotal = cantidad + (existente?.Cantidad ?? 0);
         var disponible = Disponible(producto);
 
         if (cantidadTotal > disponible)
@@ -468,13 +938,14 @@ else
             {
                 IdProducto = producto.IdProducto,
                 Producto = producto.Producto,
-                Cantidad = cantidadSel,
+                Cantidad = cantidad,
                 PrecioUnitario = producto.PrecioVenta
             });
         }
 
         idProductoSel = 0;
-        cantidadSel = 1;
+        codigoTexto = "";
+        cantidadTexto = "1";
     }
 
     private void Quitar(LineaVenta linea)
@@ -489,19 +960,19 @@ else
     {
         errorForm = null;
 
-        if (fecha == default)
+        if (fecha is null)
         {
-            errorForm = "La fecha de la venta es obligatoria.";
+            errorForm = "Ingrese una fecha válida con el formato dd/mm/aaaa.";
             return;
         }
-        if (fecha.Date > DateTime.Today)
+        if (fecha.Value.Date > DateTime.Today)
         {
             errorForm = "La fecha de la venta no puede ser futura.";
             return;
         }
-        if (idCliente == 0)
+        if (clienteSel is null)
         {
-            errorForm = "Seleccione un cliente.";
+            errorForm = "Busque el cliente por NIT (o use Consumidor final).";
             return;
         }
         if (idEmpleado == 0)
@@ -521,8 +992,8 @@ else
             // El precio NO se envía: la API toma siempre el precio_venta del producto.
             var cuerpo = new
             {
-                fechaFactura = DateOnly.FromDateTime(fecha),
-                idCliente,
+                fechaFactura = DateOnly.FromDateTime(fecha.Value),
+                idCliente = clienteSel.Id,
                 idEmpleado,
                 detalles = lineas.Select(l => new { idProducto = l.IdProducto, cantidad = l.Cantidad }).ToList()
             };
@@ -535,20 +1006,16 @@ else
 
             if (respuesta.IsSuccessStatusCode)
             {
+                VentaModel? guardada;
                 if (editandoId is null)
-                {
-                    var creada = await respuesta.Content.ReadFromJsonAsync<VentaModel>();
-                    mensajeOk = creada is null
-                        ? "Venta registrada correctamente."
-                        : $"Venta {creada.Serie}-{creada.NoFactura} registrada. Total: {Q(creada.Total)}.";
-                }
+                    guardada = await respuesta.Content.ReadFromJsonAsync<VentaModel>();
                 else
-                {
-                    mensajeOk = "Venta actualizada correctamente.";
-                }
+                    guardada = await Obtener<VentaModel>($"Ventas/{editandoId}");
 
+                mensajeOk = editandoId is null ? "Venta registrada correctamente." : "Venta actualizada correctamente.";
                 modoFormulario = false;
-                await CargarTodo();
+                factura = guardada;
+                await CargarTodo(mostrarCargando: false);
             }
             else
             {
@@ -658,6 +1125,7 @@ else
         public DateOnly FechaFactura { get; set; }
         public int IdCliente { get; set; }
         public string Cliente { get; set; } = "";
+        public string ClienteNit { get; set; } = "";
         public int IdEmpleado { get; set; }
         public string Empleado { get; set; } = "";
         public decimal Total { get; set; }
@@ -680,5 +1148,23 @@ else
         public int Cantidad { get; set; }
         public decimal PrecioUnitario { get; set; }
         public decimal Subtotal => Cantidad * PrecioUnitario;
+    }
+
+    public class NuevoClienteModel
+    {
+        public string Nit { get; set; } = "";
+        public string Nombres { get; set; } = "";
+        public string Apellidos { get; set; } = "";
+        public int Genero { get; set; } = -1;
+        public string Telefono { get; set; } = "";
+        public string Correo { get; set; } = "";
+    }
+
+    public class ClienteCreadoModel
+    {
+        public int IdCliente { get; set; }
+        public string Nombres { get; set; } = "";
+        public string Apellidos { get; set; } = "";
+        public string Nit { get; set; } = "";
     }
 }

@@ -1,0 +1,70 @@
+@using System.Globalization
+
+@* Campo de fecha en formato dd/mm/aaaa (el <input type="date"> del navegador usa el formato del sistema). *@
+<div class="input-group has-validation">
+    <input type="text" class="form-control @(invalido ? "is-invalid" : "")"
+           placeholder="dd/mm/aaaa" maxlength="10" inputmode="numeric"
+           value="@texto" @onchange="AlCambiar" />
+    <button type="button" class="btn btn-outline-secondary" @onclick="PonerHoy" title="Poner la fecha de hoy">Hoy</button>
+    <div class="invalid-feedback">Use el formato dd/mm/aaaa (por ejemplo 14/10/2026).</div>
+</div>
+
+@code {
+    private static readonly string[] formatos =
+        { "dd/MM/yyyy", "d/M/yyyy", "dd-MM-yyyy", "d-M-yyyy", "ddMMyyyy" };
+
+    [Parameter] public DateTime? Value { get; set; }
+    [Parameter] public EventCallback<DateTime?> ValueChanged { get; set; }
+
+    private string texto = "";
+    private bool invalido;
+    private DateTime? ultimo;
+
+    protected override void OnParametersSet()
+    {
+        // Solo refleja el valor si el padre lo cambió (por ejemplo al limpiar el formulario o al editar).
+        if (Value != ultimo)
+        {
+            ultimo = Value;
+            texto = Value?.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture) ?? "";
+            invalido = false;
+        }
+    }
+
+    private async Task AlCambiar(ChangeEventArgs e)
+    {
+        texto = (e.Value?.ToString() ?? "").Trim();
+
+        if (texto.Length == 0)
+        {
+            invalido = false;
+            await Publicar(null);
+            return;
+        }
+
+        if (DateTime.TryParseExact(texto, formatos, CultureInfo.InvariantCulture, DateTimeStyles.None, out var fecha))
+        {
+            invalido = false;
+            texto = fecha.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture);
+            await Publicar(fecha.Date);
+        }
+        else
+        {
+            invalido = true;
+            await Publicar(null);
+        }
+    }
+
+    private async Task PonerHoy()
+    {
+        invalido = false;
+        texto = DateTime.Today.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture);
+        await Publicar(DateTime.Today);
+    }
+
+    private async Task Publicar(DateTime? valor)
+    {
+        ultimo = valor;
+        await ValueChanged.InvokeAsync(valor);
+    }
+}

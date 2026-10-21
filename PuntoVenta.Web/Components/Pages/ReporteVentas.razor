@@ -1,4 +1,5 @@
 @page "/reportes/ventas"
+@using System.Text.RegularExpressions
 @inject HttpClient Http
 @inject SesionUsuario Sesion
 @inject NavigationManager Nav
@@ -21,29 +22,42 @@
         <div class="row g-3 align-items-end">
             <div class="col-md-3">
                 <label class="form-label">Desde</label>
-                <input type="date" class="form-control" @bind="desde" />
+                <CampoFecha @bind-Value="desde" />
             </div>
             <div class="col-md-3">
                 <label class="form-label">Hasta</label>
-                <input type="date" class="form-control" @bind="hasta" />
+                <CampoFecha @bind-Value="hasta" />
             </div>
-            <div class="col-md-3">
-                <label class="form-label">Cliente</label>
-                <select class="form-select" @bind="idCliente">
-                    <option value="0">Todos</option>
-                    @foreach (var c in clientes)
-                    {
-                        <option value="@c.Id">@c.Nombre</option>
-                    }
-                </select>
-            </div>
-            <div class="col-md-3">
+            <div class="col-md-6">
                 <label class="form-label">Empleado</label>
                 <select class="form-select" @bind="idEmpleado">
                     <option value="0">Todos</option>
                     @foreach (var e in empleados)
                     {
                         <option value="@e.Id">@e.Nombre</option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">NIT del cliente</label>
+                <div class="input-group">
+                    <input class="form-control" maxlength="12" placeholder="Ej. 1234567-8 o CF"
+                           value="@nitBusqueda" @oninput="AlEscribirNit" @onkeydown="NitKey" />
+                    <button type="button" class="btn btn-outline-primary" @onclick="BuscarPorNit">Buscar</button>
+                </div>
+                @if (mensajeNit is not null)
+                {
+                    <div class="form-text text-danger">@mensajeNit</div>
+                }
+            </div>
+            <div class="col-md-8">
+                <label class="form-label">Cliente</label>
+                <select class="form-select" @bind="idCliente">
+                    <option value="0">Todos</option>
+                    @foreach (var c in clientes)
+                    {
+                        <option value="@c.Id">@c.Nombre (NIT: @c.Detalle)</option>
                     }
                 </select>
             </div>
@@ -114,6 +128,53 @@ else if (cargando)
     private DateTime? hasta;
     private int idCliente;
     private int idEmpleado;
+    private string nitBusqueda = "";
+    private string? mensajeNit;
+
+    private const string PatronNit = @"^([0-9]{1,10}-?[0-9Kk]|[Cc][Ff])$";
+
+    private static string NormalizarNit(string? nit) =>
+        (nit ?? "").Replace("-", "").Replace(" ", "").Trim().ToUpperInvariant();
+
+    private void AlEscribirNit(ChangeEventArgs e)
+    {
+        nitBusqueda = e.Value?.ToString() ?? "";
+        mensajeNit = null;
+    }
+
+    private async Task NitKey(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") await BuscarPorNit();
+    }
+
+    // Busca el cliente por NIT, lo deja seleccionado en el combo y consulta el reporte.
+    private async Task BuscarPorNit()
+    {
+        mensajeNit = null;
+
+        var nit = nitBusqueda.Trim().ToUpperInvariant();
+        if (nit.Length == 0)
+        {
+            mensajeNit = "Escriba un NIT para buscar.";
+            return;
+        }
+        if (!Regex.IsMatch(nit, PatronNit))
+        {
+            mensajeNit = "NIT inválido. Ejemplo: 1234567-8 o CF.";
+            return;
+        }
+
+        var normalizado = NormalizarNit(nit);
+        var cliente = clientes.FirstOrDefault(c => NormalizarNit(c.Detalle) == normalizado);
+        if (cliente is null)
+        {
+            mensajeNit = $"No existe un cliente con el NIT {nit}.";
+            return;
+        }
+
+        idCliente = cliente.Id;
+        await Consultar();
+    }
 
     private bool cargando = true;
     private string? mensajeError;
@@ -175,6 +236,8 @@ else if (cargando)
         hasta = null;
         idCliente = 0;
         idEmpleado = 0;
+        nitBusqueda = "";
+        mensajeNit = null;
         await Consultar();
     }
 
@@ -217,6 +280,7 @@ else if (cargando)
     {
         public int Id { get; set; }
         public string Nombre { get; set; } = "";
+        public string? Detalle { get; set; }
     }
 
     public class ReporteModel

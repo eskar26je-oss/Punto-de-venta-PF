@@ -268,6 +268,7 @@ public class VentasController : ControllerBase
             .Select(v => new VentaDto(
                 v.IdVenta, v.Serie, v.NoFactura, v.FechaFactura,
                 v.IdCliente, v.IdClienteNavigation.Nombres + " " + v.IdClienteNavigation.Apellidos,
+                v.IdClienteNavigation.Nit,
                 v.IdEmpleado, v.IdEmpleadoNavigation.Nombres + " " + v.IdEmpleadoNavigation.Apellidos,
                 v.VentasDetalles.Sum(d => d.Cantidad * d.PrecioUnitario),
                 v.VentasDetalles.Select(d => new VentaDetalleDto(
