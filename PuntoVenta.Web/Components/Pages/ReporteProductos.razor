@@ -25,13 +25,9 @@
         <input class="form-control" placeholder="Buscar producto..." @bind="buscar" @bind:event="oninput" />
     </div>
     <div class="col-md-4">
-        <select class="form-select" @bind="marcaFiltro">
-            <option value="">Todas las marcas</option>
-            @foreach (var marca in Marcas)
-            {
-                <option value="@marca">@marca</option>
-            }
-        </select>
+        <SelectorBuscable TextoTodos="Todas las marcas"
+                  Opciones="@(Marcas.Select(m => new SelectorBuscable.Opcion(m, m)))"
+                  @bind-Value="marcaFiltro" />
     </div>
     <div class="col-md-3">
         <button class="btn btn-outline-secondary w-100" @onclick="Limpiar">Limpiar filtros</button>

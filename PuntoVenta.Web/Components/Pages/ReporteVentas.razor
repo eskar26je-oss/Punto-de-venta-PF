@@ -7,7 +7,10 @@
 
 <PageTitle>Reporte de ventas</PageTitle>
 
-<h3 class="mb-3">Reporte de ventas</h3>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0">Reporte de ventas</h3>
+    <a class="btn btn-outline-secondary btn-sm no-imprimir" href="reportes">Volver a Reportes</a>
+</div>
 
 @if (mensajeError is not null)
 {
@@ -30,13 +33,10 @@
             </div>
             <div class="col-md-6">
                 <label class="form-label">Empleado</label>
-                <select class="form-select" @bind="idEmpleado">
-                    <option value="0">Todos</option>
-                    @foreach (var e in empleados)
-                    {
-                        <option value="@e.Id">@e.Nombre</option>
-                    }
-                </select>
+                <SelectorBuscable TextoTodos="Todos los empleados"
+                  Opciones="@(empleados.Select(e => new SelectorBuscable.Opcion(e.Id.ToString(), e.Nombre)))"
+                  Value="@(idEmpleado == 0 ? "" : idEmpleado.ToString())"
+                  ValueChanged="@((string v) => idEmpleado = v == "" ? 0 : int.Parse(v))" />
             </div>
 
             <div class="col-md-4">

@@ -1,0 +1,337 @@
+/* Letra estilo "vintage" para títulos y menú (parecida a Porcelain de Canva).
+   Ya viene gruesa de por sí, por eso se usa con font-weight 400. */
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&display=swap');
+
+/* =========================================================
+   Tema "Café y arena" para Punto de Venta
+   Paleta: #714329, #B08463, #B9937B, #D0B9A7, #B5A192
+   Este archivo se carga al final, por eso tiene prioridad.
+   ========================================================= */
+
+:root {
+    --pv-espresso: #3A2418;   /* lo más oscuro: inicio del degradado del menú */
+    --pv-cafe: #714329;       /* color principal: botones, menú */
+    --pv-cafe-hover: #5E3722; /* al pasar el mouse sobre botones */
+    --pv-caramelo: #B08463;   /* final de degradados, enlaces al pasar el mouse */
+    --pv-canela: #B9937B;     /* detalles */
+    --pv-arena: #D0B9A7;      /* bordes y opción activa del menú */
+    --pv-piedra: #B5A192;     /* textos secundarios */
+    --pv-crema: #F4EEE7;      /* fondo claro */
+    --pv-lino: #E3D9CC;       /* fondo (final del degradado) */
+    --pv-tinta: #2A211C;      /* texto */
+
+    /* Letra de títulos y menú. Si no hay internet, usa Bodoni/Didot/Georgia. */
+    --pv-letra-elegante: 'DM Serif Display', 'Bodoni MT', Georgia, serif;
+
+    /* Letra de los encabezados de las tablas */
+    --pv-letra-tablas: 'Times New Roman', Times, Georgia, serif;
+
+    /* Letra para todo lo demás (contenido de tablas, botones, campos) */
+    --pv-letra-texto: 'Times New Roman', Times, Georgia, serif;
+}
+
+/* ---------- Base ---------- */
+html, body {
+    font-family: var(--pv-letra-texto);
+    font-size: 1.05rem;
+    color: var(--pv-tinta);
+}
+
+/* Campos, botones y listas también usan esta letra */
+.btn,
+.form-control,
+.form-select,
+.form-label,
+.list-group-item,
+.alert,
+.badge,
+.page-link,
+.table {
+    font-family: var(--pv-letra-texto);
+}
+
+body {
+    min-height: 100vh;
+    background-color: var(--pv-crema);
+    background-image: linear-gradient(180deg, var(--pv-crema) 0%, var(--pv-lino) 100%);
+    background-attachment: fixed;
+}
+
+/* Títulos con letra elegante y delgada */
+h1, h2, h3, h4 {
+    font-family: var(--pv-letra-elegante);
+    font-weight: 400;
+    letter-spacing: 0.01em;
+    color: var(--pv-tinta);
+}
+
+h3 {
+    font-size: 2rem;
+}
+
+.text-muted {
+    color: #7A665A !important;
+}
+
+a, .btn-link {
+    color: var(--pv-cafe);
+}
+
+    a:hover, .btn-link:hover {
+        color: var(--pv-caramelo);
+    }
+
+/* ---------- Menú lateral claro con degradado ---------- */
+.page .sidebar {
+    background-color: var(--pv-lino);
+    background-image: linear-gradient(180deg, var(--pv-lino) 0%, var(--pv-arena) 100%);
+    border-right: 1px solid rgba(113, 67, 41, 0.15);
+}
+
+    /* Franja del nombre "Punto de Venta" en café */
+    .page .sidebar .top-row {
+        background-color: var(--pv-cafe);
+    }
+
+    .page .sidebar .navbar-brand {
+        font-family: var(--pv-letra-elegante);
+        font-size: 1.4rem;
+        font-weight: 400;
+        letter-spacing: 0.02em;
+    }
+
+    .page .sidebar .nav-item .nav-link {
+        color: var(--pv-tinta);
+        border-radius: 6px;
+        font-family: var(--pv-letra-elegante);
+        font-size: 1.1rem;
+        font-weight: 400;
+        letter-spacing: 0.02em;
+    }
+
+        .page .sidebar .nav-item .nav-link:hover {
+            background-color: rgba(113, 67, 41, 0.08);
+            color: var(--pv-espresso);
+        }
+
+        /* Opción activa: fondo café suave y una línea café a la izquierda */
+        .page .sidebar .nav-item .nav-link.active {
+            background-color: rgba(113, 67, 41, 0.14);
+            color: var(--pv-espresso);
+            box-shadow: inset 3px 0 0 var(--pv-cafe);
+        }
+
+    /* Los íconos del menú eran blancos; ahora se ven en café */
+    .page .sidebar .nav-item .bi {
+        filter: brightness(0) saturate(100%) invert(27%) sepia(30%) saturate(900%) hue-rotate(345deg);
+        opacity: 0.8;
+    }
+
+    /* Flechitas para abrir/cerrar submenús */
+    .page .sidebar .nav-item .btn.text-white {
+        color: var(--pv-cafe) !important;
+    }
+
+/* ---------- Barra superior (Usuario: admin) ---------- */
+.page main .top-row {
+    background-color: rgba(244, 238, 231, 0.85);
+    border-bottom: 1px solid var(--pv-arena);
+    backdrop-filter: blur(6px);
+}
+
+/* ---------- Botones ---------- */
+.btn-primary {
+    --bs-btn-bg: var(--pv-cafe);
+    --bs-btn-border-color: var(--pv-cafe);
+    --bs-btn-hover-bg: var(--pv-cafe-hover);
+    --bs-btn-hover-border-color: var(--pv-cafe-hover);
+    --bs-btn-active-bg: var(--pv-espresso);
+    --bs-btn-active-border-color: var(--pv-espresso);
+    --bs-btn-disabled-bg: var(--pv-cafe);
+    --bs-btn-disabled-border-color: var(--pv-cafe);
+    background-color: var(--bs-btn-bg);
+    border-color: var(--bs-btn-border-color);
+    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0) 100%);
+}
+
+.btn-outline-primary {
+    --bs-btn-color: var(--pv-cafe);
+    --bs-btn-border-color: var(--pv-cafe);
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: var(--pv-cafe);
+    --bs-btn-hover-border-color: var(--pv-cafe);
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: var(--pv-espresso);
+    --bs-btn-active-border-color: var(--pv-espresso);
+}
+
+.btn-outline-secondary {
+    --bs-btn-color: #6B5A4E;
+    --bs-btn-border-color: var(--pv-piedra);
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: var(--pv-canela);
+    --bs-btn-hover-border-color: var(--pv-canela);
+}
+
+/* Editar (antes amarillo): arena con texto café */
+.btn-warning {
+    --bs-btn-color: var(--pv-tinta);
+    --bs-btn-bg: var(--pv-arena);
+    --bs-btn-border-color: var(--pv-arena);
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: var(--pv-canela);
+    --bs-btn-hover-border-color: var(--pv-canela);
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: var(--pv-caramelo);
+    --bs-btn-active-border-color: var(--pv-caramelo);
+}
+
+/* Eliminar (antes rojo brillante): rojo ladrillo que combina con el café */
+.btn-danger {
+    --bs-btn-bg: #8C3B2E;
+    --bs-btn-border-color: #8C3B2E;
+    --bs-btn-hover-bg: #722F25;
+    --bs-btn-hover-border-color: #722F25;
+    --bs-btn-active-bg: #5C261E;
+    --bs-btn-active-border-color: #5C261E;
+    --bs-btn-disabled-bg: #8C3B2E;
+    --bs-btn-disabled-border-color: #8C3B2E;
+}
+
+.btn-outline-danger {
+    --bs-btn-color: #8C3B2E;
+    --bs-btn-border-color: #8C3B2E;
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: #8C3B2E;
+    --bs-btn-hover-border-color: #8C3B2E;
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: #722F25;
+    --bs-btn-active-border-color: #722F25;
+}
+
+/* Cancelar / secundarios: piedra */
+.btn-secondary {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: #8F7B6D;
+    --bs-btn-border-color: #8F7B6D;
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: #7A675A;
+    --bs-btn-hover-border-color: #7A675A;
+    --bs-btn-active-bg: #66554A;
+    --bs-btn-active-border-color: #66554A;
+}
+
+/* Guardar venta / confirmar: verde oliva, que combina con tonos tierra */
+.btn-success {
+    --bs-btn-bg: #5E7A4C;
+    --bs-btn-border-color: #5E7A4C;
+    --bs-btn-hover-bg: #4E6740;
+    --bs-btn-hover-border-color: #4E6740;
+    --bs-btn-active-bg: #405535;
+    --bs-btn-active-border-color: #405535;
+    --bs-btn-disabled-bg: #5E7A4C;
+    --bs-btn-disabled-border-color: #5E7A4C;
+}
+
+.btn-outline-dark {
+    --bs-btn-color: var(--pv-espresso);
+    --bs-btn-border-color: var(--pv-espresso);
+    --bs-btn-hover-bg: var(--pv-espresso);
+    --bs-btn-hover-border-color: var(--pv-espresso);
+}
+
+/* ---------- Campos ---------- */
+.form-control,
+.form-select {
+    border-color: var(--pv-arena);
+}
+
+.btn:focus,
+.btn:active:focus,
+.btn-link.nav-link:focus,
+.form-control:focus,
+.form-select:focus,
+.form-check-input:focus {
+    border-color: var(--pv-caramelo);
+    box-shadow: 0 0 0 0.2rem rgba(176, 132, 99, 0.3);
+}
+
+.form-check-input:checked {
+    background-color: var(--pv-cafe);
+    border-color: var(--pv-cafe);
+}
+
+/* ---------- Tablas ---------- */
+.table {
+    font-variant-numeric: tabular-nums;
+    --bs-table-striped-bg: rgba(176, 132, 99, 0.07);
+    --bs-table-hover-bg: rgba(176, 132, 99, 0.13);
+}
+
+/* Encabezado de tabla con degradado de café a caramelo */
+.table > thead.table-dark {
+    background-image: linear-gradient(90deg, var(--pv-cafe) 0%, #8A5A3B 55%, #9C6F50 100%);
+}
+
+.table-dark {
+    --bs-table-color: #fff;
+    --bs-table-bg: transparent;
+    --bs-table-accent-bg: transparent;
+    --bs-table-striped-bg: transparent;
+    --bs-table-hover-bg: transparent;
+    --bs-table-border-color: rgba(255, 255, 255, 0.15);
+}
+
+    /* Encabezados de las tablas en Times New Roman negrita */
+    .table > thead th,
+    .table-dark th {
+        font-family: var(--pv-letra-tablas);
+        font-weight: 700;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+    }
+
+/* ---------- Tarjetas y listas ---------- */
+.card {
+    border-color: var(--pv-arena);
+    background-color: #FFFCF9;
+}
+
+.list-group-item.active {
+    background-color: var(--pv-cafe);
+    border-color: var(--pv-cafe);
+}
+
+/* ---------- Paginación ---------- */
+.pagination {
+    --bs-pagination-color: var(--pv-cafe);
+    --bs-pagination-hover-color: var(--pv-caramelo);
+    --bs-pagination-focus-color: var(--pv-cafe);
+    --bs-pagination-focus-box-shadow: 0 0 0 0.2rem rgba(176, 132, 99, 0.3);
+    --bs-pagination-active-bg: var(--pv-cafe);
+    --bs-pagination-active-border-color: var(--pv-cafe);
+}
+
+/* ---------- Al imprimir ---------- */
+@media print {
+    body {
+        background-image: none;
+        background-color: #fff;
+    }
+
+    .table > thead.table-dark {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+}
+
+/* ---------- Permisos: si el usuario solo puede VER una sección,
+   se esconden los botones de crear, editar y eliminar ---------- */
+.solo-lectura .btn-primary:not(.siempre-visible),
+.solo-lectura .btn-success:not(.siempre-visible),
+.solo-lectura .btn-warning,
+.solo-lectura .btn-danger,
+.solo-lectura .btn-outline-danger {
+    display: none !important;
+}

@@ -8,10 +8,10 @@ public class SesionUsuario
     private const string Clave = "sesion";
 
     private readonly HttpClient _http;
-    private readonly ProtectedSessionStorage _almacen;
+    private readonly ProtectedLocalStorage _almacen;
     private bool _restaurada;
 
-    public SesionUsuario(HttpClient http, ProtectedSessionStorage almacen)
+    public SesionUsuario(HttpClient http, ProtectedLocalStorage almacen)
     {
         _http = http;
         _almacen = almacen;

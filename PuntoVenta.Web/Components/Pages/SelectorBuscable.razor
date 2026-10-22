@@ -1,0 +1,133 @@
+@using System.Globalization
+
+@* Lista desplegable donde se puede escribir para buscar y moverse con scroll. *@
+<div class="position-relative">
+    <input type="text" class="form-control" placeholder="@TextoTodos"
+           value="@texto"
+           @oninput="AlEscribir"
+           @onfocus="Abrir"
+           @onclick="Abrir"
+           @onblur="AlSalir"
+           @onkeydown="AlPresionarTecla" />
+
+    @if (abierto)
+    {
+        <ul class="list-group position-absolute w-100 shadow"
+            style="max-height: 220px; overflow-y: auto; z-index: 1050; cursor: pointer;">
+            <li class="list-group-item list-group-item-action @(Value == "" ? "active" : "")"
+                @onmousedown="() => Seleccionar(null)" @onmousedown:preventDefault>
+                @TextoTodos
+            </li>
+
+            @foreach (var opcion in Filtradas)
+            {
+                <li class="list-group-item list-group-item-action @(opcion.Valor == Value ? "active" : "")"
+                    @onmousedown="() => Seleccionar(opcion)" @onmousedown:preventDefault>
+                    @opcion.Texto
+                </li>
+            }
+
+            @if (!Filtradas.Any())
+            {
+                <li class="list-group-item text-muted">Sin resultados</li>
+            }
+        </ul>
+    }
+</div>
+
+@code {
+    public record Opcion(string Valor, string Texto);
+
+    [Parameter] public IEnumerable<Opcion> Opciones { get; set; } = Enumerable.Empty<Opcion>();
+    [Parameter] public string Value { get; set; } = "";
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+    [Parameter] public string TextoTodos { get; set; } = "Todos";
+
+    // Compara sin importar mayúsculas ni tildes (ej. "tecnologica" encuentra "Tecnológica").
+    private static readonly CompareInfo comparador = CultureInfo.GetCultureInfo("es-GT").CompareInfo;
+
+    private string texto = "";
+    private string filtro = "";
+    private bool abierto;
+
+    private IEnumerable<Opcion> Filtradas =>
+        string.IsNullOrWhiteSpace(filtro)
+            ? Opciones
+            : Opciones.Where(o => comparador.IndexOf(o.Texto, filtro.Trim(),
+                CompareOptions.IgnoreCase | CompareOptions.IgnoreNonSpace) >= 0);
+
+    protected override void OnParametersSet()
+    {
+        // Mientras el usuario escribe no se toca el texto.
+        if (!abierto)
+        {
+            texto = TextoSeleccionado();
+        }
+    }
+
+    private string TextoSeleccionado() =>
+        Value == "" ? "" : Opciones.FirstOrDefault(o => o.Valor == Value)?.Texto ?? "";
+
+    private void Abrir()
+    {
+        if (abierto) return;
+        abierto = true;
+        filtro = "";
+    }
+
+    private void AlEscribir(ChangeEventArgs e)
+    {
+        texto = e.Value?.ToString() ?? "";
+        filtro = texto;
+        abierto = true;
+    }
+
+    private async Task AlSalir()
+    {
+        if (!abierto) return;
+
+        if (texto.Trim() == "")
+        {
+            // Si borró todo, vuelve a "Todos".
+            await Seleccionar(null);
+            return;
+        }
+
+        // Si escribió algo pero no eligió nada, regresa al valor que ya estaba.
+        abierto = false;
+        filtro = "";
+        texto = TextoSeleccionado();
+    }
+
+    private async Task AlPresionarTecla(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && abierto)
+        {
+            var primera = Filtradas.FirstOrDefault();
+            if (primera is not null)
+            {
+                await Seleccionar(primera);
+            }
+        }
+        else if (e.Key == "Escape")
+        {
+            abierto = false;
+            filtro = "";
+            texto = TextoSeleccionado();
+        }
+    }
+
+    private async Task Seleccionar(Opcion? opcion)
+    {
+        abierto = false;
+        filtro = "";
+        texto = opcion?.Texto ?? "";
+
+        var nuevo = opcion?.Valor ?? "";
+        if (nuevo != Value)
+        {
+            Value = nuevo;
+            await ValueChanged.InvokeAsync(nuevo);
+        }
+    }
+}

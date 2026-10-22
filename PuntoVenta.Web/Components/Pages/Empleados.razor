@@ -203,16 +203,14 @@ else
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Fecha de nacimiento</label>
-                                <InputDate class="form-control" ParsingErrorMessage="La fecha no es válida"
-                                           max="@(DateTime.Today.AddYears(-18).ToString("yyyy-MM-dd"))"
-                                           @bind-Value="empleadoActual.FechaNacimiento" />
+                                <CampoFecha Value="@(empleadoActual.FechaNacimiento?.ToDateTime(TimeOnly.MinValue))"
+            ValueChanged="@((DateTime? v) => empleadoActual.FechaNacimiento = v is null ? null : DateOnly.FromDateTime(v.Value))" />
                                 <ValidationMessage For="() => empleadoActual.FechaNacimiento" class="text-danger small" />
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Fecha de inicio de labores</label>
-                                <InputDate class="form-control" ParsingErrorMessage="La fecha no es válida"
-                                           max="@(DateTime.Today.ToString("yyyy-MM-dd"))"
-                                           @bind-Value="empleadoActual.FechaInicioLabores" />
+                                <CampoFecha Value="@(empleadoActual.FechaInicioLabores?.ToDateTime(TimeOnly.MinValue))"
+            ValueChanged="@((DateTime? v) => empleadoActual.FechaInicioLabores = v is null ? null : DateOnly.FromDateTime(v.Value))" />
                                 <ValidationMessage For="() => empleadoActual.FechaInicioLabores" class="text-danger small" />
                             </div>
                         </div>

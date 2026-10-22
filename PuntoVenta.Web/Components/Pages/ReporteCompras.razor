@@ -6,7 +6,10 @@
 
 <PageTitle>Reporte de compras</PageTitle>
 
-<h3 class="mb-3">Reporte de compras</h3>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0">Reporte de compras</h3>
+    <a class="btn btn-outline-secondary btn-sm no-imprimir" href="reportes">Volver a Reportes</a>
+</div>
 
 @if (mensajeError is not null)
 {
@@ -21,21 +24,18 @@
         <div class="row g-3 align-items-end">
             <div class="col-md-3">
                 <label class="form-label">Desde</label>
-                <input type="date" class="form-control" @bind="desde" />
+                <CampoFecha @bind-Value="desde" />
             </div>
             <div class="col-md-3">
                 <label class="form-label">Hasta</label>
-                <input type="date" class="form-control" @bind="hasta" />
+                <CampoFecha @bind-Value="hasta" />
             </div>
             <div class="col-md-6">
                 <label class="form-label">Proveedor</label>
-                <select class="form-select" @bind="idProveedor">
-                    <option value="0">Todos</option>
-                    @foreach (var p in proveedores)
-                    {
-                        <option value="@p.Id">@p.Nombre</option>
-                    }
-                </select>
+                <SelectorBuscable TextoTodos="Todos los proveedores"
+                  Opciones="@(proveedores.Select(p => new SelectorBuscable.Opcion(p.Id.ToString(), p.Nombre)))"
+                  Value="@(idProveedor == 0 ? "" : idProveedor.ToString())"
+                  ValueChanged="@((string v) => idProveedor = v == "" ? 0 : int.Parse(v))" />
             </div>
         </div>
         <div class="mt-3">
