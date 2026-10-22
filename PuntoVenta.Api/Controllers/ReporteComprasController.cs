@@ -9,6 +9,7 @@ namespace PuntoVenta.Api.Controllers;
 [ApiController]
 [Route("api/reportes/compras")]
 [Authorize]
+	[Permiso("/reportes")]
 public class ReporteComprasController : ControllerBase
 {
     private readonly PuntoVentaContext _db;

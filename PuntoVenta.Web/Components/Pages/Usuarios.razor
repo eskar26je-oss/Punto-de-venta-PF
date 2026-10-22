@@ -1,0 +1,520 @@
+@page "/usuarios"
+@using System.ComponentModel.DataAnnotations
+@inject HttpClient Http
+@inject SesionUsuario Sesion
+@inject NavigationManager Nav
+
+<PageTitle>Usuarios</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0">Usuarios</h3>
+    <button class="btn btn-primary" @onclick="AbrirNuevo">Nuevo usuario</button>
+</div>
+
+@if (mensajeError is not null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @mensajeError
+        <button type="button" class="btn-close" @onclick="() => mensajeError = null"></button>
+    </div>
+}
+
+@if (mensajeOk is not null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @mensajeOk
+        <button type="button" class="btn-close" @onclick="() => mensajeOk = null"></button>
+    </div>
+}
+
+@if (cargando)
+{
+    <p><em>Cargando...</em></p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped table-hover align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>Usuario</th>
+                    <th>Estado</th>
+                    <th>Permisos</th>
+                    <th>Creado</th>
+                    <th class="text-center" style="width: 120px;">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!usuarios.Any())
+                {
+                    <tr>
+                        <td colspan="5" class="text-center text-muted">No hay usuarios para mostrar</td>
+                    </tr>
+                }
+                @foreach (var u in usuarios)
+                {
+                    <tr>
+                        <td>@u.Usuario</td>
+                        <td>
+                            @if (u.Activo)
+                            {
+                                <span class="badge bg-success">Activo</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">Inactivo</span>
+                            }
+                        </td>
+                        <td>
+                            @if (u.EsAdmin)
+                            {
+                                <span>Acceso total</span>
+                            }
+                            else
+                            {
+                                <span>Ve @u.OpcionesQueVe opciones, edita @u.OpcionesQueEdita</span>
+                            }
+                        </td>
+                        <td>@u.FechaIngreso.ToString("dd/MM/yyyy")</td>
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-warning" @onclick="() => AbrirEditar(u)">Editar</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@if (mostrarModal)
+{
+    <div class="modal fade show" style="display:block;" tabindex="-1" role="dialog">
+          <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <EditForm Model="actual" OnValidSubmit="Guardar">
+                    <DataAnnotationsValidator />
+
+                    <div class="modal-header">
+                        <h5 class="modal-title">@(esEdicion ? $"Editar usuario: {actual.Usuario}" : "Nuevo usuario")</h5>
+                        <button type="button" class="btn-close" @onclick="CerrarModal"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        @if (errorModal is not null)
+                        {
+                            <div class="alert alert-danger">@errorModal</div>
+                        }
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Usuario</label>
+                                <InputText class="form-control" @bind-Value="actual.Usuario" disabled="@actual.EsAdmin" />
+                                <ValidationMessage For="() => actual.Usuario" class="text-danger small" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Contraseña</label>
+                                <InputText type="password" class="form-control" @bind-Value="actual.Contrasena"
+                                           placeholder="@(esEdicion ? "Déjala vacía para no cambiarla" : "Mínimo 6 caracteres")" />
+                                <ValidationMessage For="() => actual.Contrasena" class="text-danger small" />
+                            </div>
+                        </div>
+
+                        @if (actual.EsAdmin)
+                        {
+                            <div class="alert alert-info mb-0">
+                                El administrador siempre tiene acceso a todo. Aquí solo puedes cambiar su contraseña.
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="form-check mb-3">
+                                <InputCheckbox class="form-check-input" id="usuarioActivo" @bind-Value="actual.Activo" />
+                                <label class="form-check-label" for="usuarioActivo">
+                                    Usuario activo (si lo desactivas, ya no podrá iniciar sesión)
+                                </label>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <label class="form-label mb-0">Qué puede ver y editar</label>
+                                <div>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary me-1" @onclick="VerTodo">Ver todo</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary me-1" @onclick="EditarTodo">Editar todo</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="QuitarTodo">Quitar todo</button>
+                                </div>
+                            </div>
+
+                            <table class="table table-sm table-bordered align-middle mb-1">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Opción del menú</th>
+                                        <th class="text-center" style="width: 90px;">Ver</th>
+                                        <th class="text-center" style="width: 120px;">Editar</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var fila in filas)
+                                    {
+                                        <tr>
+                                            <td style="padding-left: @(0.5 + fila.Nivel * 1.5)rem;">@fila.Nombre</td>
+                                            <td class="text-center">
+                                                <input type="checkbox" class="form-check-input"
+                                                       checked="@fila.PuedeVer"
+                                                       @onchange="e => CambiarVer(fila, e)" />
+                                            </td>
+                                            <td class="text-center">
+                                                @if (fila.PermiteEditar)
+                                                {
+                                                    <input type="checkbox" class="form-check-input"
+                                                           checked="@fila.PuedeEditar"
+                                                           @onchange="e => CambiarEditar(fila, e)" />
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted small">Solo consulta</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                            <p class="text-muted small mb-0">
+                                "Editar" permite crear, modificar y eliminar. Si marcas Editar, también se marca Ver.
+                            </p>
+                        }
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="CerrarModal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary" disabled="@guardando">
+                            @(guardando ? "Guardando..." : "Guardar")
+                        </button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+}
+
+@code {
+    private List<UsuarioModel> usuarios = new();
+    private List<ModuloModel> modulos = new();
+    private List<FilaPermiso> filas = new();
+    private UsuarioForm actual = new();
+
+    private bool cargando = true;
+    private bool mostrarModal;
+    private bool esEdicion;
+    private bool guardando;
+
+    private string? mensajeError;
+    private string? mensajeOk;
+    private string? errorModal;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Cargar();
+    }
+
+    private async Task Cargar()
+    {
+        cargando = true;
+
+        try
+        {
+            var respuesta = await Http.GetAsync("Usuarios");
+            if (await RevisarAcceso(respuesta)) return;
+
+            if (respuesta.IsSuccessStatusCode)
+            {
+                usuarios = await respuesta.Content.ReadFromJsonAsync<List<UsuarioModel>>() ?? new();
+            }
+            else
+            {
+                mensajeError = "No se pudieron cargar los usuarios.";
+            }
+
+            var respModulos = await Http.GetAsync("Usuarios/modulos");
+            if (respModulos.IsSuccessStatusCode)
+            {
+                modulos = await respModulos.Content.ReadFromJsonAsync<List<ModuloModel>>() ?? new();
+            }
+        }
+        catch (Exception ex)
+        {
+            mensajeError = $"No se pudo conectar con la API: {ex.Message}";
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    /// <summary>Si el token venció lo manda al login; si no es admin, muestra un mensaje.</summary>
+    private async Task<bool> RevisarAcceso(HttpResponseMessage respuesta)
+    {
+        if (respuesta.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            Sesion.Cerrar();
+            Nav.NavigateTo("/login");
+            return true;
+        }
+
+        if (respuesta.StatusCode == System.Net.HttpStatusCode.Forbidden)
+        {
+            mensajeError = await LeerMensaje(respuesta) ?? "Solo el administrador puede administrar usuarios.";
+            return true;
+        }
+
+        return false;
+    }
+
+    private void AbrirNuevo()
+    {
+        esEdicion = false;
+        errorModal = null;
+        actual = new UsuarioForm();
+        filas = modulos.Select(m => new FilaPermiso
+        {
+            IdMenu = m.IdMenu,
+            Nombre = m.Nombre,
+            Nivel = m.Nivel,
+            PermiteEditar = m.PermiteEditar
+        }).ToList();
+        mostrarModal = true;
+    }
+
+    private async Task AbrirEditar(UsuarioModel usuario)
+    {
+        errorModal = null;
+
+        try
+        {
+            var respuesta = await Http.GetAsync($"Usuarios/{usuario.IdUsuario}");
+            if (await RevisarAcceso(respuesta)) return;
+
+            var detalle = await respuesta.Content.ReadFromJsonAsync<UsuarioDetalle>();
+            if (detalle is null)
+            {
+                mensajeError = "No se pudo cargar el usuario.";
+                return;
+            }
+
+            esEdicion = true;
+            actual = new UsuarioForm
+            {
+                IdUsuario = detalle.IdUsuario,
+                Usuario = detalle.Usuario,
+                Activo = detalle.Activo,
+                EsAdmin = detalle.EsAdmin
+            };
+
+            filas = modulos.Select(m =>
+            {
+                var permiso = detalle.Permisos.FirstOrDefault(p => p.IdMenu == m.IdMenu);
+                return new FilaPermiso
+                {
+                    IdMenu = m.IdMenu,
+                    Nombre = m.Nombre,
+                    Nivel = m.Nivel,
+                    PermiteEditar = m.PermiteEditar,
+                    PuedeVer = permiso?.PuedeVer ?? false,
+                    PuedeEditar = permiso?.PuedeEditar ?? false
+                };
+            }).ToList();
+
+            mostrarModal = true;
+        }
+        catch (Exception ex)
+        {
+            mensajeError = $"No se pudo conectar con la API: {ex.Message}";
+        }
+    }
+
+    private void CerrarModal()
+    {
+        mostrarModal = false;
+        errorModal = null;
+    }
+
+    // ---------- Casillas de permisos ----------
+
+    private void CambiarVer(FilaPermiso fila, ChangeEventArgs e)
+    {
+        fila.PuedeVer = e.Value is true;
+        if (!fila.PuedeVer) fila.PuedeEditar = false; // sin ver, no puede editar
+    }
+
+    private void CambiarEditar(FilaPermiso fila, ChangeEventArgs e)
+    {
+        fila.PuedeEditar = e.Value is true;
+        if (fila.PuedeEditar) fila.PuedeVer = true; // si edita, también ve
+    }
+
+    private void VerTodo()
+    {
+        foreach (var f in filas) f.PuedeVer = true;
+    }
+
+    private void EditarTodo()
+    {
+        foreach (var f in filas)
+        {
+            f.PuedeVer = true;
+            f.PuedeEditar = f.PermiteEditar;
+        }
+    }
+
+    private void QuitarTodo()
+    {
+        foreach (var f in filas)
+        {
+            f.PuedeVer = false;
+            f.PuedeEditar = false;
+        }
+    }
+
+    // ---------- Guardar ----------
+
+    private async Task Guardar()
+    {
+        errorModal = null;
+
+        var contrasena = actual.Contrasena?.Trim() ?? "";
+
+        if (!esEdicion && contrasena.Length == 0)
+        {
+            errorModal = "Escribe una contraseña para el nuevo usuario.";
+            return;
+        }
+
+        if (contrasena.Length > 0 && contrasena.Length < 6)
+        {
+            errorModal = "La contraseña debe tener al menos 6 caracteres.";
+            return;
+        }
+
+        guardando = true;
+
+        try
+        {
+            var datos = new
+            {
+                usuario = actual.Usuario.Trim(),
+                contrasena = contrasena.Length > 0 ? contrasena : null,
+                activo = actual.Activo,
+                permisos = filas
+                    .Where(f => f.PuedeVer || f.PuedeEditar)
+                    .Select(f => new { idMenu = f.IdMenu, puedeVer = f.PuedeVer, puedeEditar = f.PuedeEditar })
+                    .ToList()
+            };
+
+            var respuesta = esEdicion
+                ? await Http.PutAsJsonAsync($"Usuarios/{actual.IdUsuario}", datos)
+                : await Http.PostAsJsonAsync("Usuarios", datos);
+
+            if (await RevisarAcceso(respuesta)) return;
+
+            if (respuesta.IsSuccessStatusCode)
+            {
+                mensajeOk = esEdicion ? "Usuario actualizado." : "Usuario creado.";
+                mostrarModal = false;
+                await Cargar();
+            }
+            else
+            {
+                errorModal = await LeerMensaje(respuesta) ?? "No se pudo guardar. Revisa los datos.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorModal = $"No se pudo conectar con la API: {ex.Message}";
+        }
+        finally
+        {
+            guardando = false;
+        }
+    }
+
+    private static async Task<string?> LeerMensaje(HttpResponseMessage respuesta)
+    {
+        try
+        {
+            var error = await respuesta.Content.ReadFromJsonAsync<RespuestaError>();
+            return string.IsNullOrWhiteSpace(error?.Mensaje) ? null : error.Mensaje;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    // ---------- Modelos ----------
+
+    public class UsuarioModel
+    {
+        public int IdUsuario { get; set; }
+        public string Usuario { get; set; } = "";
+        public bool Activo { get; set; }
+        public bool EsAdmin { get; set; }
+        public DateTime FechaIngreso { get; set; }
+        public int OpcionesQueVe { get; set; }
+        public int OpcionesQueEdita { get; set; }
+    }
+
+    public class ModuloModel
+    {
+        public int IdMenu { get; set; }
+        public string Nombre { get; set; } = "";
+        public string? Ruta { get; set; }
+        public int Nivel { get; set; }
+        public bool PermiteEditar { get; set; }
+    }
+
+    public class UsuarioDetalle
+    {
+        public int IdUsuario { get; set; }
+        public string Usuario { get; set; } = "";
+        public bool Activo { get; set; }
+        public bool EsAdmin { get; set; }
+        public List<PermisoModel> Permisos { get; set; } = new();
+    }
+
+    public class PermisoModel
+    {
+        public int IdMenu { get; set; }
+        public bool PuedeVer { get; set; }
+        public bool PuedeEditar { get; set; }
+    }
+
+    public class FilaPermiso
+    {
+        public int IdMenu { get; set; }
+        public string Nombre { get; set; } = "";
+        public int Nivel { get; set; }
+        public bool PermiteEditar { get; set; }
+        public bool PuedeVer { get; set; }
+        public bool PuedeEditar { get; set; }
+    }
+
+    public class UsuarioForm
+    {
+        public int IdUsuario { get; set; }
+
+        [Required(ErrorMessage = "El usuario es obligatorio")]
+        [StringLength(30, MinimumLength = 3, ErrorMessage = "El usuario debe tener entre 3 y 30 caracteres")]
+        public string Usuario { get; set; } = "";
+
+        [StringLength(50, ErrorMessage = "Máximo 50 caracteres")]
+        public string? Contrasena { get; set; }
+
+        public bool Activo { get; set; } = true;
+
+        public bool EsAdmin { get; set; }
+    }
+
+    public class RespuestaError
+    {
+        public string? Mensaje { get; set; }
+    }
+}

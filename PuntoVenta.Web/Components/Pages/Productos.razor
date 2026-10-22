@@ -93,8 +93,8 @@ else
                             <td class="text-end">@producto.Existencia</td>
                             <td>@producto.FechaIngreso.ToString("dd/MM/yyyy")</td>
                             <td class="text-center">
-                                <button class="btn btn-sm btn-warning me-1" @onclick="() => AbrirModalEditar(producto)">Editar</button>
-                                <button class="btn btn-sm btn-danger" @onclick="() => PedirConfirmacionEliminar(producto)">Eliminar</button>
+                                <button class="btn btn-sm btn-warning me-1" @onclick="() => autorizacion.Ejecutar(Recurso, producto.IdProducto, () => AbrirModalEditar(producto))">Editar</button>
+<button class="btn btn-sm btn-danger" @onclick="() => autorizacion.Ejecutar(Recurso, producto.IdProducto, () => PedirConfirmacionEliminar(producto))">Eliminar</button>
                             </td>
                         </tr>
                     }
@@ -253,8 +253,10 @@ else
     </div>
     <div class="modal-backdrop fade show"></div>
 }
-
+<AutorizacionAdmin @ref="autorizacion" />
 @code {
+    private AutorizacionAdmin autorizacion = default!;
+private const string Recurso = "productos";
     private static readonly string[] extensionesPermitidas = { ".jpg", ".jpeg", ".png", ".webp" };
     private const long tamanoMaximoImagen = 2 * 1024 * 1024;
 

@@ -1,0 +1,172 @@
+@inject HttpClient Http
+@inject SesionUsuario Sesion
+
+@* Ventana que pide el usuario y la contraseña del admin para autorizar una acción. *@
+@if (visible)
+{
+    <div class="modal fade show" style="display:block;" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <form @onsubmit="Autorizar">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Autorización del administrador</h5>
+                        <button type="button" class="btn-close" @onclick="Cancelar"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <p class="mb-3">Para <strong>@accion</strong> se necesita la autorización del administrador.</p>
+
+                        @if (error is not null)
+                        {
+                            <div class="alert alert-danger">@error</div>
+                        }
+
+                        <div class="mb-3">
+                            <label class="form-label">Usuario del administrador</label>
+                            <input class="form-control" @bind="usuario" autocomplete="off" />
+                        </div>
+                        <div class="mb-1">
+                            <label class="form-label">Contraseña</label>
+                            <input type="password" class="form-control" @bind="contrasena" autocomplete="new-password" />
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="Cancelar">Cancelar</button>
+                        <button type="submit" class="btn btn-primary siempre-visible" disabled="@validando">
+                            @(validando ? "Verificando..." : "Autorizar")
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+}
+
+@code {
+    private bool visible;
+    private bool validando;
+    private string usuario = "";
+    private string contrasena = "";
+    private string? error;
+
+    private string accion = "";
+    private string recurso = "";
+    private int idRegistro;
+
+    private TaskCompletionSource<bool>? espera;
+
+    /// <summary>
+    /// Pide la autorización y espera la respuesta.
+    /// Devuelve true si el admin autorizó (o si quien lo pide ya es el admin).
+    /// </summary>
+    public Task<bool> SolicitarAsync(string recurso, int idRegistro, string accion)
+    {
+        if (Sesion.EsAdmin) return Task.FromResult(true);
+
+        this.recurso = recurso;
+        this.idRegistro = idRegistro;
+        this.accion = accion;
+        usuario = "";
+        contrasena = "";
+        error = null;
+        visible = true;
+
+        espera = new TaskCompletionSource<bool>();
+        StateHasChanged();
+        return espera.Task;
+    }
+
+    /// <summary>
+    /// Pide la autorización y, si el admin la da, hace la acción.
+    /// Ejemplo: autorizacion.Ejecutar(Recurso, cliente.IdCliente, () => AbrirModalEditar(cliente))
+    /// </summary>
+    public async Task Ejecutar(string recurso, int idRegistro, Action siAutoriza)
+    {
+        if (await SolicitarAsync(recurso, idRegistro, "hacer este cambio"))
+            siAutoriza();
+    }
+
+    public async Task Ejecutar(string recurso, int idRegistro, Func<Task> siAutoriza)
+    {
+        if (await SolicitarAsync(recurso, idRegistro, "hacer este cambio"))
+            await siAutoriza();
+    }
+
+    private async Task Autorizar()
+    {
+        if (string.IsNullOrWhiteSpace(usuario) || string.IsNullOrWhiteSpace(contrasena))
+        {
+            error = "Escribe el usuario y la contraseña del administrador.";
+            return;
+        }
+
+        validando = true;
+        error = null;
+
+        try
+        {
+            var respuesta = await Http.PostAsJsonAsync("Autorizaciones", new
+            {
+                usuario,
+                contrasena,
+                recurso,
+                idRegistro
+            });
+
+            if (respuesta.IsSuccessStatusCode)
+            {
+                var datos = await respuesta.Content.ReadFromJsonAsync<RespuestaAutorizacion>();
+                if (datos is not null && !string.IsNullOrEmpty(datos.Token))
+                {
+                    Sesion.UsarAutorizacion(datos.Token);
+                    visible = false;
+                    contrasena = "";
+                    espera?.TrySetResult(true);
+                    return;
+                }
+            }
+
+            error = await LeerMensaje(respuesta) ?? "Usuario o contraseña del administrador incorrectos.";
+        }
+        catch
+        {
+            error = "No se pudo conectar con la API.";
+        }
+        finally
+        {
+            validando = false;
+        }
+    }
+
+    private void Cancelar()
+    {
+        visible = false;
+        contrasena = "";
+        espera?.TrySetResult(false);
+    }
+
+    private static async Task<string?> LeerMensaje(HttpResponseMessage respuesta)
+    {
+        try
+        {
+            var datos = await respuesta.Content.ReadFromJsonAsync<RespuestaError>();
+            return string.IsNullOrWhiteSpace(datos?.Mensaje) ? null : datos.Mensaje;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private class RespuestaAutorizacion
+    {
+        public string Token { get; set; } = "";
+    }
+
+    private class RespuestaError
+    {
+        public string? Mensaje { get; set; }
+    }
+}

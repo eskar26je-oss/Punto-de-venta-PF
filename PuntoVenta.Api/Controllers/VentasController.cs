@@ -10,6 +10,7 @@ namespace PuntoVenta.Api.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
+	[Permiso("/ventas")]
 public class VentasController : ControllerBase
 {
     private const string SerieDefecto = "A";
@@ -125,7 +126,7 @@ public class VentasController : ControllerBase
 
         return CreatedAtAction(nameof(GetPorId), new { id = venta.IdVenta }, await ObtenerDto(venta.IdVenta));
     }
-
+	[RequiereAutorizacionAdmin("ventas")]
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Put(int id, VentaCrearDto dto)
     {
@@ -157,6 +158,7 @@ public class VentasController : ControllerBase
     }
 
     // Anula la venta y devuelve la existencia a los productos.
+    	[RequiereAutorizacionAdmin("ventas")]
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {

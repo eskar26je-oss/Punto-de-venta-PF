@@ -1,4 +1,4 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
 @inject SesionUsuario Sesion
 @inject NavigationManager Nav
 
@@ -14,8 +14,18 @@
                 <span>Usuario: <strong>@Sesion.Usuario</strong></span>
             </div>
 
-            <article class="content px-4">
-                @Body
+            @* "solo-lectura" esconde los botones de crear, editar y eliminar *@
+            <article class="content px-4 @(SoloLectura ? "solo-lectura" : "")">
+                @if (PuedeVerPagina)
+                {
+                    @Body
+                }
+                else
+                {
+                    <div class="alert alert-warning mt-3">
+                        No tienes permiso para ver esta sección. Pide acceso al administrador.
+                    </div>
+                }
             </article>
         </main>
     </div>
@@ -28,6 +38,14 @@
 </div>
 
 @code {
+    private string RutaActual => "/" + Nav.ToBaseRelativePath(Nav.Uri);
+
+    private bool PuedeVerPagina => Sesion.PuedeVer(RutaActual);
+
+    // Los reportes solo se consultan, por eso nunca se ponen en solo lectura
+    private bool SoloLectura =>
+        SesionUsuario.RutaModulo(RutaActual) != "/reportes" && !Sesion.PuedeEditar(RutaActual);
+
     protected override async Task OnInitializedAsync()
     {
         await Sesion.RestaurarAsync();

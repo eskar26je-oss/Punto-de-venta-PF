@@ -9,6 +9,7 @@ namespace PuntoVenta.Api.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
+	[Permiso("/marcas", TambienVer = new[] { "/productos" })]
 public class MarcasController : ControllerBase
 {
     private readonly PuntoVentaContext _db;
@@ -49,7 +50,7 @@ public class MarcasController : ControllerBase
 
         return CreatedAtAction(nameof(GetPorId), new { id = marca.IdMarca }, marca);
     }
-
+[RequiereAutorizacionAdmin("marcas")]
     [HttpPut("{id}")]
     public async Task<IActionResult> Put(short id, Marca marca)
     {
@@ -70,7 +71,7 @@ public class MarcasController : ControllerBase
 
         return NoContent();
     }
-
+[RequiereAutorizacionAdmin("marcas")]
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(short id)
     {

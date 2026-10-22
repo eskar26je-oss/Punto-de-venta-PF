@@ -70,9 +70,8 @@ else
                             <td>@proveedor.Direccion</td>
                             <td>@proveedor.Telefono</td>
                             <td class="text-center">
-                                <button class="btn btn-sm btn-warning me-1" @onclick="() => AbrirModalEditar(proveedor)">Editar</button>
-                                <button class="btn btn-sm btn-danger" @onclick="() => PedirConfirmacionEliminar(proveedor)">Eliminar</button>
-                            </td>
+                                <button class="btn btn-sm btn-warning me-1" @onclick="() => autorizacion.Ejecutar(Recurso, proveedor.IdProveedor, () => AbrirModalEditar(proveedor))">Editar</button>
+<button class="btn btn-sm btn-danger" @onclick="() => autorizacion.Ejecutar(Recurso, proveedor.IdProveedor, () => PedirConfirmacionEliminar(proveedor))">Eliminar</button>                            </td>
                         </tr>
                     }
                 }
@@ -180,7 +179,10 @@ else
     </div>
     <div class="modal-backdrop fade show"></div>
 }
+<AutorizacionAdmin @ref="autorizacion" />
 @code {
+    private AutorizacionAdmin autorizacion = default!;
+private const string Recurso = "proveedores";
     private List<ProveedorModel> proveedores = new();
     private ProveedorModel proveedorActual = new();
     private ProveedorModel? proveedorAEliminar;

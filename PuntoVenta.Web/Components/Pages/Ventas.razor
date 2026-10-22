@@ -130,7 +130,7 @@ else if (factura is not null)
         </div>
 
         <div class="factura-acciones no-imprimir">
-            <button type="button" class="btn btn-primary" @onclick="Imprimir">Imprimir</button>
+           <button type="button" class="btn btn-primary siempre-visible" @onclick="Imprimir">Imprimir</button>
             <button type="button" class="btn btn-success" @onclick="NuevaVenta">Nueva venta</button>
             <button type="button" class="btn btn-outline-secondary" @onclick="CerrarFactura">Volver a la lista</button>
         </div>
@@ -179,9 +179,8 @@ else if (!modoFormulario)
                             <td class="text-end">@Q(v.Total)</td>
                             <td class="text-center">
                                 <button class="btn btn-sm btn-outline-primary me-1" @onclick="() => VerFactura(v.IdVenta)">Factura</button>
-                                <button class="btn btn-sm btn-warning me-1" @onclick="() => Editar(v.IdVenta)">Editar</button>
-                                <button class="btn btn-sm btn-danger" @onclick="() => PedirAnular(v)">Anular</button>
-                            </td>
+                                <button class="btn btn-sm btn-warning me-1" @onclick="() => autorizacion.Ejecutar(Recurso, v.IdVenta, () => Editar(v.IdVenta))">Editar</button>
+<button class="btn btn-sm btn-danger" @onclick="() => autorizacion.Ejecutar(Recurso, v.IdVenta, () => PedirAnular(v))">Anular</button> </td>
                         </tr>
                     }
                 }
@@ -437,8 +436,10 @@ else
     </div>
     <div class="modal-backdrop fade show"></div>
 }
-
+<AutorizacionAdmin @ref="autorizacion" />
 @code {
+    private AutorizacionAdmin autorizacion = default!;
+private const string Recurso = "ventas";
     // Nombre que aparece en el encabezado de la factura (cámbielo por el de su negocio).
     private const string NombreNegocio = "PUNTO DE VENTA";
 

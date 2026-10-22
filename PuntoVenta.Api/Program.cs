@@ -14,7 +14,9 @@ builder.Services.AddDbContext<PuntoVentaContext>(opciones =>
     var conexion = builder.Configuration.GetConnectionString("Default");
     opciones.UseMySql(conexion, ServerVersion.AutoDetect(conexion));
 });
-
+// Cada vez que arranca la API se genera una llave nueva:
+// los tokens anteriores dejan de servir y hay que iniciar sesión otra vez.
+builder.Configuration["Jwt:Key"] = builder.Configuration["Jwt:Key"] + "-" + Guid.NewGuid();
 var jwt = builder.Configuration.GetSection("Jwt");
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(opciones =>

@@ -9,6 +9,7 @@ namespace PuntoVenta.Api.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
+	[Permiso("/puestos", TambienVer = new[] { "/empleados" })]
 public class PuestosController : ControllerBase
 {
     private readonly PuntoVentaContext _db;
@@ -49,7 +50,7 @@ public class PuestosController : ControllerBase
 
         return CreatedAtAction(nameof(GetPorId), new { id = puesto.IdPuesto }, puesto);
     }
-
+[RequiereAutorizacionAdmin("puestos")]
     [HttpPut("{id}")]
     public async Task<IActionResult> Put(short id, Puesto puesto)
     {
@@ -70,7 +71,7 @@ public class PuestosController : ControllerBase
 
         return NoContent();
     }
-
+[RequiereAutorizacionAdmin("puestos")]
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(short id)
     {

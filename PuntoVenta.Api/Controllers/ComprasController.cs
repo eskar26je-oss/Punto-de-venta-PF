@@ -10,6 +10,7 @@ namespace PuntoVenta.Api.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
+	[Permiso("/compras")]
 public class ComprasController : ControllerBase
 {
     // true  = al guardar una compra, productos.precio_costo pasa a ser el costo de esa compra.
@@ -125,7 +126,7 @@ public class ComprasController : ControllerBase
 
         return CreatedAtAction(nameof(GetPorId), new { id = compra.IdCompra }, await ObtenerDto(compra.IdCompra));
     }
-
+[RequiereAutorizacionAdmin("compras")]
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Put(int id, CompraCrearDto dto)
     {
@@ -178,6 +179,7 @@ public class ComprasController : ControllerBase
 
     // Anula la compra y descuenta del inventario lo que había ingresado.
     // Si ya se vendió parte de esa mercadería y no alcanza la existencia, no se permite.
+    [RequiereAutorizacionAdmin("compras")]
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {

@@ -68,9 +68,8 @@ else
                             <td>@puesto.IdPuesto</td>
                             <td>@puesto.Nombre</td>
                             <td class="text-center">
-                                <button class="btn btn-sm btn-warning me-1" @onclick="() => AbrirModalEditar(puesto)">Editar</button>
-                                <button class="btn btn-sm btn-danger" @onclick="() => PedirConfirmacionEliminar(puesto)">Eliminar</button>
-                            </td>
+                               <button class="btn btn-sm btn-warning me-1" @onclick="() => autorizacion.Ejecutar(Recurso, puesto.IdPuesto, () => AbrirModalEditar(puesto))">Editar</button>
+<button class="btn btn-sm btn-danger" @onclick="() => autorizacion.Ejecutar(Recurso, puesto.IdPuesto, () => PedirConfirmacionEliminar(puesto))">Eliminar</button>                            </td>
                         </tr>
                     }
                 }
@@ -162,8 +161,10 @@ else
     </div>
     <div class="modal-backdrop fade show"></div>
 }
-
+<AutorizacionAdmin @ref="autorizacion" />
 @code {
+    private AutorizacionAdmin autorizacion = default!;
+private const string Recurso = "puestos";
     private List<PuestoModel> puestos = new();
     private PuestoModel puestoActual = new();
     private PuestoModel? puestoAEliminar;
