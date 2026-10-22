@@ -229,13 +229,10 @@ else
                 </div>
                 <div class="col-md-8">
                     <label class="form-label">Empleado</label>
-                    <select class="form-select" @bind="idEmpleado">
-                        <option value="0">-- Seleccione --</option>
-                        @foreach (var e in empleados)
-                        {
-                            <option value="@e.Id">@e.Nombre</option>
-                        }
-                    </select>
+                    <SelectorBuscable TextoTodos="-- Seleccione --"
+                  Opciones="@(empleados.Select(e => new SelectorBuscable.Opcion(e.Id.ToString(), e.Nombre)))"
+                  Value="@(idEmpleado == 0 ? "" : idEmpleado.ToString())"
+                  ValueChanged="@((string v) => idEmpleado = v == "" ? 0 : int.Parse(v))" />
                 </div>
 
                 <div class="col-12">
@@ -324,15 +321,10 @@ else
                 </div>
                 <div class="col-md-5">
                     <label class="form-label">Producto</label>
-                    <select class="form-select" @bind="ProductoElegido">
-                        <option value="0">-- Seleccione --</option>
-                        @foreach (var p in productos)
-                        {
-                            <option value="@p.IdProducto" disabled="@(Disponible(p) <= 0)">
-                                @p.IdProducto · @p.Producto - @Q(p.PrecioVenta) (Existencia: @Disponible(p))
-                            </option>
-                        }
-                    </select>
+                    <SelectorBuscable TextoTodos="-- Seleccione --"
+                  Opciones="@(productos.Where(p => Disponible(p) > 0).Select(p => new SelectorBuscable.Opcion(p.IdProducto.ToString(), $"{p.IdProducto} - {p.Producto} - {Q(p.PrecioVenta)} (Existencia: {Disponible(p)})")))"
+                  Value="@(ProductoElegido == 0 ? "" : ProductoElegido.ToString())"
+                  ValueChanged="@((string v) => ProductoElegido = v == "" ? 0 : int.Parse(v))" />
                 </div>
                 <div class="col-md-2">
                     <label class="form-label">Cantidad</label>

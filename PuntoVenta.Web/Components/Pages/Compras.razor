@@ -118,13 +118,10 @@ else
                     <CampoFecha Value="fecha" ValueChanged="@((DateTime? v) => fecha = v ?? default)" />                </div>
                 <div class="col-md-8">
                     <label class="form-label">Proveedor</label>
-                    <select class="form-select" @bind="idProveedor">
-                        <option value="0">-- Seleccione --</option>
-                        @foreach (var p in proveedores)
-                        {
-                            <option value="@p.Id">@p.Nombre (NIT: @p.Detalle)</option>
-                        }
-                    </select>
+                   <SelectorBuscable TextoTodos="-- Seleccione --"
+                  Opciones="@(proveedores.Select(p => new SelectorBuscable.Opcion(p.Id.ToString(), $"{p.Nombre} (NIT: {p.Detalle})")))"
+                  Value="@(idProveedor == 0 ? "" : idProveedor.ToString())"
+                  ValueChanged="@((string v) => idProveedor = v == "" ? 0 : int.Parse(v))" />
                 </div>
             </div>
 
@@ -134,15 +131,10 @@ else
             <div class="row g-2 align-items-end mb-1">
                 <div class="col-md-5">
                     <label class="form-label">Producto</label>
-                    <select class="form-select" @bind="IdProductoSel">
-                        <option value="0">-- Seleccione --</option>
-                        @foreach (var p in productos)
-                        {
-                            <option value="@p.IdProducto">
-                                @p.Producto (Existencia: @p.Existencia)
-                            </option>
-                        }
-                    </select>
+                    <SelectorBuscable TextoTodos="-- Seleccione --"
+                  Opciones="@(productos.Select(p => new SelectorBuscable.Opcion(p.IdProducto.ToString(), $"{p.Producto} (Existencia: {p.Existencia})")))"
+                  Value="@(IdProductoSel == 0 ? "" : IdProductoSel.ToString())"
+                  ValueChanged="@((string v) => IdProductoSel = v == "" ? 0 : int.Parse(v))" />
                 </div>
                 <div class="col-md-2">
                     <label class="form-label">Cantidad</label>

@@ -10,7 +10,7 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddHttpClient("PuntoVentaApi", client =>
 {
-    client.BaseAddress = new Uri("http://localhost:5280/api/");
+      client.BaseAddress = new Uri(builder.Configuration["ApiUrl"] ?? "http://localhost:5280/api/");
 });
 builder.Services.AddScoped(sp =>
     sp.GetRequiredService<IHttpClientFactory>().CreateClient("PuntoVentaApi"));
@@ -48,8 +48,10 @@ if (!app.Environment.IsDevelopment())
 }
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 
-var carpetaFotos = Path.GetFullPath(
-    Path.Combine(app.Environment.ContentRootPath, "..", "FotosProductos"));
+var carpetaFotos = app.Configuration["CarpetaFotos"];
+if (string.IsNullOrWhiteSpace(carpetaFotos))
+    carpetaFotos = Path.Combine(app.Environment.ContentRootPath, "..", "FotosProductos");
+carpetaFotos = Path.GetFullPath(carpetaFotos);
 Directory.CreateDirectory(carpetaFotos);
 
 app.UseStaticFiles(new StaticFileOptions

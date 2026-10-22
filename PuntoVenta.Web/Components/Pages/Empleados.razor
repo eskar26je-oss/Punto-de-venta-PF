@@ -35,13 +35,10 @@
                @bind="Buscar" @bind:event="oninput" />
     </div>
     <div class="col-md-3">
-        <select class="form-select" @bind="FiltroPuesto">
-            <option value="0">Todos los puestos</option>
-            @foreach (var puesto in puestos)
-            {
-                <option value="@puesto.IdPuesto">@puesto.Nombre</option>
-            }
-        </select>
+        <SelectorBuscable TextoTodos="Todos los puestos"
+                  Opciones="@(puestos.Select(p => new SelectorBuscable.Opcion(p.IdPuesto.ToString(), p.Nombre)))"
+                  Value="@(FiltroPuesto == 0 ? "" : FiltroPuesto.ToString())"
+                  ValueChanged="@((string v) => FiltroPuesto = v == "" ? 0 : int.Parse(v))" />
     </div>
     <div class="col-md-4 text-md-end">
         <button class="btn btn-primary" @onclick="AbrirModalNuevo">Nuevo empleado</button>
@@ -188,13 +185,10 @@ else
                                     <label class="form-label">Puesto</label>
                                     <a href="puestos" class="small">Administrar puestos</a>
                                 </div>
-                                <InputSelect class="form-select" @bind-Value="empleadoActual.IdPuesto">
-                                    <option value="0">-- Seleccione un puesto --</option>
-                                    @foreach (var puesto in puestos)
-                                    {
-                                        <option value="@puesto.IdPuesto">@puesto.Nombre</option>
-                                    }
-                                </InputSelect>
+                                <SelectorBuscable TextoTodos="-- Seleccione un puesto --"
+                  Opciones="@(puestos.Select(p => new SelectorBuscable.Opcion(p.IdPuesto.ToString(), p.Nombre)))"
+                  Value="@(empleadoActual.IdPuesto == 0 ? "" : empleadoActual.IdPuesto.ToString())"
+                  ValueChanged="@((string v) => empleadoActual.IdPuesto = v == "" ? (short)0 : short.Parse(v))" />
                                 <ValidationMessage For="() => empleadoActual.IdPuesto" class="text-danger small" />
                             </div>
                         </div>

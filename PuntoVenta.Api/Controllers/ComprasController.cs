@@ -302,8 +302,11 @@ public class ComprasController : ControllerBase
         {
             var idProducto = l.IdProducto;
             var precio = l.PrecioCostoUnitario;
-            await _db.Productos.Where(p => p.IdProducto == idProducto)
-                .ExecuteUpdateAsync(s => s.SetProperty(p => p.PrecioCosto, precio));
+               var precioVenta = Math.Round(precio * 1.25m, 2); // costo + 25%
+   await _db.Productos.Where(p => p.IdProducto == idProducto)
+       .ExecuteUpdateAsync(s => s
+           .SetProperty(p => p.PrecioCosto, precio)
+           .SetProperty(p => p.PrecioVenta, precioVenta));
         }
     }
 

@@ -335,3 +335,8 @@ a, .btn-link {
 .solo-lectura .btn-outline-danger {
     display: none !important;
 }
+/* Que los montos no se partan en dos líneas */
+.table td.text-end,
+.table th.text-end {
+    white-space: nowrap;
+}
